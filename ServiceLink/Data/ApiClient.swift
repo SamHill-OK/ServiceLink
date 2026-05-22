@@ -16,7 +16,7 @@ final class ApiClient {
     func login(
         email: String,
         password: String
-    ) async throws -> LoginResponse {
+        ) async throws -> LoginResponse {
 
         guard let url = URL(
             string: "\(ApiConfig.baseUrl)/api/Login/Member"
@@ -69,5 +69,31 @@ final class ApiClient {
         print(String(data: data, encoding: .utf8) ?? "NO DATA")
 
         return try decoder.decode(LoginResponse.self, from: data)
+    }
+    
+    func getAssignments(
+        clientId: Int,
+        memberId: Int
+        ) async throws -> [ServiceLinkAssignment] {
+
+        guard let url =
+            URL(
+                string:
+                "\(ApiConfig.baseUrl)/api/ServiceLink/Assignments?clientId=\(clientId)&memberId=\(memberId)"
+            )
+        else {
+            throw URLError(.badURL)
+        }
+
+        let (data, _) =
+            try await URLSession.shared.data(
+                from: url
+            )
+
+        return try JSONDecoder()
+            .decode(
+                [ServiceLinkAssignment].self,
+                from: data
+            )
     }
 }
