@@ -58,6 +58,20 @@ struct UpcomingAssignmentsView: View {
 
                             Text(item.formattedCalendarDate)
                                 .font(.caption)
+                            
+                            Text(
+                                item.smsReply.isEmpty
+                                    ? "Pending"
+                                    : item.smsReply
+                            )
+                            .font(.caption)
+                            .foregroundStyle(
+                                item.smsReply == "Y"
+                                    ? .green
+                                    : item.smsReply == "N"
+                                    ? .red
+                                    : .orange
+                            )
                         }
                     }
                 }
