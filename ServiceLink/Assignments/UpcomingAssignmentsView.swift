@@ -10,6 +10,7 @@ import SwiftUI
 struct UpcomingAssignmentsView: View {
 
     @EnvironmentObject var appState: AppState
+    @Environment(\.scenePhase) private var scenePhase
 
     @StateObject private var vm =
         UpcomingAssignmentsViewModel()
@@ -83,6 +84,27 @@ struct UpcomingAssignmentsView: View {
                 await vm.load(
                     appState: appState
                 )
+            }
+            .toolbar {
+
+                ToolbarItem(
+                    placement:
+                        .topBarTrailing
+                ) {
+
+                    Button(
+                        "Logout"
+                    ) {
+                        appState.logout()
+                    }
+                }
+            }
+            .onChange(of: scenePhase) {
+                if scenePhase == .active {
+                    Task {
+                        await vm.load(appState: appState)
+                    }
+                }
             }
         }
     }
