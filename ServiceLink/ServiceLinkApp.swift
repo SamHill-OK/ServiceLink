@@ -9,9 +9,24 @@ import SwiftUI
 
 @main
 struct ServiceLinkApp: App {
+
+    @StateObject private var appState = AppState()
+
     var body: some Scene {
+
         WindowGroup {
-            ContentView()
+
+            if appState.session == nil {
+
+                LoginView()
+                    .environmentObject(appState)
+
+            } else {
+
+                Text("Logged In")
+                    .environmentObject(appState)
+
+            }
         }
     }
 }

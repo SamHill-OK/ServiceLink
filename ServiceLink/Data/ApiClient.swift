@@ -63,7 +63,11 @@ final class ApiClient {
             )
         }
 
-        return try JSONDecoder()
-            .decode(LoginResponse.self, from: data)
+        let decoder = JSONDecoder()
+        
+        
+        print(String(data: data, encoding: .utf8) ?? "NO DATA")
+
+        return try decoder.decode(LoginResponse.self, from: data)
     }
 }

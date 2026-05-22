@@ -13,10 +13,14 @@ struct LoginRequest: Codable {
 }
 
 struct LoginResponse: Codable {
-    let memberId: Int
+
+    let memberID: Int
     let memberName: String
-    let clientId: Int
+
+    let clientID: Int
     let clientName: String
-    let roleId: Int
+
+    let roleID: Int
+
     let token: String
 }

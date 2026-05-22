@@ -21,17 +21,18 @@ final class LoginViewModel: ObservableObject {
                 password: password
             )
 
-            appState.session = ServiceLinkSession(
-                memberId: response.memberId,
-                memberName: response.memberName,
-                clientId: response.clientId,
-                clientName: response.clientName,
-                roleId: response.roleId,
-                token: response.token
-            )
+            appState.session =
+                ServiceLinkSession(
+                    memberId: response.memberID,
+                    memberName: response.memberName,
+                    clientId: response.clientID,
+                    clientName: response.clientName,
+                    roleId: response.roleID,
+                    token: response.token
+                )
 
         } catch {
-            errorMessage = "Invalid login."
+            errorMessage = error.localizedDescription
         }
     }
 }
