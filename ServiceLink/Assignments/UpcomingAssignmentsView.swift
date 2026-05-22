@@ -19,59 +19,59 @@ struct UpcomingAssignmentsView: View {
         NavigationStack {
 
             Group {
-
+                
                 if vm.isLoading {
-
+                    
                     ProgressView()
-
+                    
                 } else if let error =
                             vm.errorMessage {
-
+                    
                     Text(error)
-
+                    
                 } else if vm.assignments.isEmpty {
-
+                    
                     ContentUnavailableView(
                         "No Assignments",
                         systemImage:
                             "calendar.badge.exclamationmark"
                     )
-
+                    
                 } else {
-
+                    
                     List(vm.assignments) { item in
-
-                        VStack(
-                            alignment: .leading,
-                            spacing: 6
-                        ) {
-
-                            Text(item.worshipName)
-                                .font(.headline)
-
-                            Text(
-                                item.daySession
-                            )
-                            .foregroundStyle(
-                                .secondary
-                            )
-
-                            Text(item.formattedCalendarDate)
+                        
+                        NavigationLink {
+                            AssignmentDetailView(assignment: item)
+                        } label: {
+                            VStack(
+                                alignment: .leading,
+                                spacing: 6
+                            ) {
+                                
+                                Text(item.worshipName)
+                                    .font(.headline)
+                                
+                                Text(
+                                    item.daySession
+                                )
+                                .foregroundStyle(
+                                    .secondary
+                                )
+                                
+                                Text(item.formattedCalendarDate)
+                                    .font(.caption)
+                                
+                                Text(item.statusText)
                                 .font(.caption)
-                            
-                            Text(
-                                item.smsReply.isEmpty
-                                    ? "Pending"
-                                    : item.smsReply
-                            )
-                            .font(.caption)
-                            .foregroundStyle(
-                                item.smsReply == "Y"
+                                .foregroundStyle(
+                                    item.statusText == "Confirmed"
                                     ? .green
-                                    : item.smsReply == "N"
+                                    : item.statusText == "xyx"
                                     ? .red
                                     : .orange
-                            )
+                                )
+                            }
                         }
                     }
                 }

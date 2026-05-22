@@ -50,4 +50,16 @@ struct ServiceLinkAssignment: Codable, Identifiable {
 
             return output.string(from: date)
         }
+    var statusText: String {
+
+        if smsReply == "Y" {
+            return "Confirmed"
+        }
+
+        if smsReply == "N" {
+            return "Declined"
+        }
+
+        return "Pending"
+    }
 }
