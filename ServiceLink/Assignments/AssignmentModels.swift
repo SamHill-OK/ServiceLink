@@ -15,6 +15,7 @@ struct ServiceLinkAssignment: Codable, Identifiable {
     let memberId: Int
 
     let worshipDate: String
+    let calendarDate: String?
 
     let worshipDay: String
     let worshipSession: String
@@ -28,4 +29,25 @@ struct ServiceLinkAssignment: Codable, Identifiable {
     let taskClass: Int?
     let sortOrder: Int?
     let sessionOrder: Int
+    
+    var formattedCalendarDate: String {
+
+            guard let calendarDate else {
+                return worshipDate
+            }
+
+            let input = DateFormatter()
+            input.dateFormat = "yyyy-MM-dd"
+
+            guard let date =
+                input.date(from: calendarDate)
+            else {
+                return calendarDate
+            }
+
+            let output = DateFormatter()
+            output.dateFormat = "MM-dd-yyyy"
+
+            return output.string(from: date)
+        }
 }

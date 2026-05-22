@@ -23,7 +23,7 @@ struct ServiceLinkApp: App {
 
             } else {
 
-                Text("Logged In")
+                UpcomingAssignmentsView()
                     .environmentObject(appState)
 
             }
