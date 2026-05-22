@@ -7,9 +7,17 @@
 
 import SwiftUI
 
-struct AssignmentDetailView: View {
 
+struct AssignmentDetailView: View {
+    
     let assignment: ServiceLinkAssignment
+    
+    @Environment(\.dismiss) private var dismiss
+
+    @StateObject private var vm =
+        AssignmentDetailViewModel()
+
+    @State private var showConfirm = false
 
     var body: some View {
 
@@ -33,13 +41,52 @@ struct AssignmentDetailView: View {
 
             Spacer()
 
-            Button(role: .destructive) {
-                // next step
-            } label: {
-                Text("Can't Serve")
+            if assignment.canDecline {
+
+                Button(role: .destructive) {
+                    showConfirm = true
+                } label: {
+                    if vm.isSubmitting {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        Text("Can't Serve")
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .confirmationDialog(
+                    "Unable to serve?",
+                    isPresented: $showConfirm
+                ) {
+
+                    Button(
+                        "Confirm Decline",
+                        role: .destructive
+                    ) {
+
+                        Task {
+
+                            let success =
+                                await vm.decline(
+                                    assignment:
+                                        assignment
+                                )
+
+                            if success {
+                                dismiss()
+                            }
+                        }
+                    }
+                }
+
+            } else {
+
+                Text("This assignment can no longer be declined in the app.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
         }
         .padding()
         .navigationTitle("Assignment Detail")

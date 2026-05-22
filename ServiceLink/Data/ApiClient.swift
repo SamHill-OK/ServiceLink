@@ -96,4 +96,42 @@ final class ApiClient {
                 from: data
             )
     }
+    
+    func declineAssignment(
+        id: Int,
+        clientId: Int,
+        memberId: Int
+    ) async throws {
+
+        guard let url = URL(
+            string: "\(ApiConfig.baseUrl)/api/ServiceLink/DeclineAssignment"
+        ) else {
+            throw URLError(.badURL)
+        }
+
+        let body = DeclineAssignmentRequest(
+            id: id,
+            clientId: clientId,
+            memberId: memberId
+        )
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(
+            "application/json",
+            forHTTPHeaderField: "Content-Type"
+        )
+
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (_, response) =
+            try await URLSession.shared.data(for: request)
+
+        guard let http = response as? HTTPURLResponse,
+              http.statusCode == 200
+        else {
+            throw URLError(.badServerResponse)
+        }
+    }
+    
 }

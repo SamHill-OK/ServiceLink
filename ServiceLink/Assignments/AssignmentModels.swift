@@ -62,4 +62,22 @@ struct ServiceLinkAssignment: Codable, Identifiable {
 
         return "Pending"
     }
+    var canDecline: Bool {
+
+        let input = DateFormatter()
+        input.dateFormat = "yyyy-MM-dd"
+
+        guard let calendarDate,
+              let date =
+                input.date(from: calendarDate)
+        else {
+            return true
+        }
+
+        return Calendar.current
+            .startOfDay(for: date)
+            >
+            Calendar.current
+            .startOfDay(for: Date())
+    }
 }
