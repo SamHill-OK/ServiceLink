@@ -23,4 +23,6 @@ struct LoginResponse: Codable {
     let roleID: Int
 
     let token: String
+    let allowPublicTaskRequests: Bool?
+
 }

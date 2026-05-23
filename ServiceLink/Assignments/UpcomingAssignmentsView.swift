@@ -181,7 +181,7 @@ struct UpcomingAssignmentsView: View {
 
                     NavigationLink {
 
-                        TaskHomeView()
+                        TaskChoicesView()
 
                     } label: {
 

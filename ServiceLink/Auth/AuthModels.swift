@@ -17,4 +17,5 @@ struct ServiceLinkSession: Codable {
     let roleId: Int
 
     let token: String
+    let allowPublicTaskRequests: Bool
 }

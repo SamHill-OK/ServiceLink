@@ -28,7 +28,9 @@ final class LoginViewModel: ObservableObject {
                     clientId: response.clientID,
                     clientName: response.clientName,
                     roleId: response.roleID,
-                    token: response.token
+                    token: response.token,
+                    allowPublicTaskRequests:
+                        response.allowPublicTaskRequests ?? false
                 )
 
         } catch {
