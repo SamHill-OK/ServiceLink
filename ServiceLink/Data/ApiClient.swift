@@ -96,7 +96,41 @@ final class ApiClient {
                 from: data
             )
     }
-    
+    func getAssignmentsForMember(
+        clientId: Int,
+        memberId: Int
+    ) async throws -> [ServiceLinkAssignment] {
+
+        guard let url =
+            URL(
+                string:
+                "\(ApiConfig.baseUrl)/api/ServiceLink/AssignmentsForMember?clientId=\(clientId)&memberId=\(memberId)"
+            )
+        else {
+            throw URLError(.badURL)
+        }
+
+        let (data, response) =
+            try await URLSession.shared.data(
+                from: url
+            )
+
+      
+
+       
+
+        let responseText =
+            String(data: data, encoding: .utf8)
+            ?? "No readable response"
+
+       
+
+        return try JSONDecoder()
+            .decode(
+                [ServiceLinkAssignment].self,
+                from: data
+            )
+    }
     func declineAssignment(
         id: Int,
         clientId: Int,
@@ -129,6 +163,52 @@ final class ApiClient {
 
         guard let http = response as? HTTPURLResponse,
               http.statusCode == 200
+        else {
+            throw URLError(.badServerResponse)
+        }
+    }
+    
+    func respondAssignment(
+        id: Int,
+        clientId: Int,
+        memberId: Int,
+        reply: String
+    ) async throws {
+
+        guard let url =
+            URL(
+                string:
+                "\(ApiConfig.baseUrl)/api/ServiceLink/RespondAssignment"
+            )
+        else {
+            throw URLError(.badURL)
+        }
+
+        let body: [String: Any] = [
+            "id": id,
+            "clientId": clientId,
+            "memberId": memberId,
+            "reply": reply
+        ]
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(
+            "application/json",
+            forHTTPHeaderField: "Content-Type"
+        )
+        request.httpBody =
+            try JSONSerialization.data(
+                withJSONObject: body
+            )
+
+        let (_, response) =
+            try await URLSession.shared.data(
+                for: request
+            )
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode)
         else {
             throw URLError(.badServerResponse)
         }

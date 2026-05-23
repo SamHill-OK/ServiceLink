@@ -35,7 +35,7 @@ struct AssignmentDetailView: View {
 
                 DetailRow(
                     label: "Status",
-                    value: assignment.statusText
+                    value: assignment.assignmentStatus
                 )
             }
 

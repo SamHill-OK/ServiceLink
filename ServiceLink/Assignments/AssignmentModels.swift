@@ -29,6 +29,7 @@ struct ServiceLinkAssignment: Codable, Identifiable {
     let taskClass: Int?
     let sortOrder: Int?
     let sessionOrder: Int
+    let assignmentStatus: String
     
     var formattedCalendarDate: String {
 
@@ -50,18 +51,7 @@ struct ServiceLinkAssignment: Codable, Identifiable {
 
             return output.string(from: date)
         }
-    var statusText: String {
-
-        if smsReply == "Y" {
-            return "Confirmed"
-        }
-
-        if smsReply == "N" {
-            return "Declined"
-        }
-
-        return "Pending"
-    }
+    
     var canDecline: Bool {
 
         let input = DateFormatter()

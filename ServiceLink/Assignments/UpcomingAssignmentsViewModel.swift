@@ -31,10 +31,32 @@ final class UpcomingAssignmentsViewModel: ObservableObject {
 
         do {
             assignments =
-                try await ApiClient.shared.getAssignments(
+                try await ApiClient.shared.getAssignmentsForMember(
                     clientId: session.clientId,
                     memberId: session.memberId
                 )
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+    func respond(
+        assignment: ServiceLinkAssignment,
+        reply: String,
+        appState: AppState
+    ) async {
+
+        errorMessage = nil
+
+        do {
+            try await ApiClient.shared.respondAssignment(
+                id: assignment.id,
+                clientId: assignment.clientId,
+                memberId: assignment.memberId,
+                reply: reply
+            )
+
+            await load(appState: appState)
+
         } catch {
             errorMessage = error.localizedDescription
         }

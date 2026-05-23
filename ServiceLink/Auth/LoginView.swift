@@ -14,20 +14,31 @@ struct LoginView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-
+            
             Spacer()
-
-            Image(systemName: "link.circle.fill")
-                .font(.system(size: 84))
-                .foregroundStyle(.blue)
-
-            Text("ServiceLink")
-                .font(.largeTitle)
-                .fontWeight(.semibold)
-
+            Image("ServiceLinkLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 220)
+                .padding(.horizontal)
+            /*Image("WspBackground")
+             .resizable()
+             .scaledToFill()
+             .frame(height: 220)
+             .clipShape(
+             RoundedRectangle(
+             cornerRadius: 24
+             )
+             )*/
+                .padding(.horizontal)
+            
+            /*Text("ServiceLink")
+             .font(.largeTitle)
+             .fontWeight(.semibold)*/
+            
             Text("Sign in to view your assignments")
                 .foregroundStyle(.secondary)
-
+            
             TextField("Email", text: $vm.email)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
@@ -35,18 +46,18 @@ struct LoginView: View {
                 .padding()
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
-
+            
             SecureField("Password", text: $vm.password)
                 .padding()
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
-
+            
             if let error = vm.errorMessage {
                 Text(error)
                     .foregroundStyle(.red)
                     .font(.caption)
             }
-
+            
             Button {
                 Task {
                     await vm.login(appState: appState)
@@ -61,9 +72,21 @@ struct LoginView: View {
             }
             .buttonStyle(.borderedProminent)
             .disabled(vm.isLoading)
-
             Spacer()
+            
+            VStack(spacing: 2) {
+                
+                Text("Powered by ")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                
+                Image("WspLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 60)
+                    .offset(y: -8)
+            }
+            .padding(.bottom, 16)
         }
-        .padding()
     }
 }
