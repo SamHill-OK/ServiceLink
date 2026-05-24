@@ -16,6 +16,33 @@ final class TaskChoicesViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var choices: [ServiceLinkTaskChoice] = []
+    var groupedChoices: [ServiceLinkTaskChoiceGroup] {
+
+        Dictionary(grouping: choices) {
+            "\($0.worshipDay)|\($0.worshipSession)|\($0.worshipName)"
+        }
+        .map { _, tasks in
+            let first = tasks.first!
+
+            return ServiceLinkTaskChoiceGroup(
+                worshipName: first.worshipName,
+                worshipDay: first.worshipDay,
+                worshipSession: first.worshipSession,
+                tasks: tasks
+            )
+        }
+        .sorted {
+            if $0.worshipDay != $1.worshipDay {
+                return $0.worshipDay < $1.worshipDay
+            }
+
+            if $0.worshipSession != $1.worshipSession {
+                return $0.worshipSession < $1.worshipSession
+            }
+
+            return $0.worshipName < $1.worshipName
+        }
+    }
 
     func loadMembers(appState: AppState) async {
 
@@ -128,6 +155,42 @@ final class TaskChoicesViewModel: ObservableObject {
             }
 
             errorMessage = error.localizedDescription
+        }
+    }
+    func requestChoiceGroup(
+        group: ServiceLinkTaskChoiceGroup,
+        appState: AppState
+    ) async {
+
+        guard let session = appState.session,
+              let selectedMember = selectedMember
+        else {
+            errorMessage = "No active session."
+            return
+        }
+
+        let newValue = !group.isOn
+
+        for task in group.tasks {
+
+            if let index = choices.firstIndex(where: { $0.worshipId == task.worshipId }) {
+                choices[index].onFlag = newValue
+            }
+
+            do {
+                try await ApiClient.shared.requestTaskChoice(
+                    clientId: session.clientId,
+                    memberId: selectedMember.memberId,
+                    worshipId: task.worshipId,
+                    onFlag: newValue
+                )
+            } catch {
+                if let index = choices.firstIndex(where: { $0.worshipId == task.worshipId }) {
+                    choices[index].onFlag.toggle()
+                }
+
+                errorMessage = error.localizedDescription
+            }
         }
     }
     

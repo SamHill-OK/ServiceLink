@@ -157,27 +157,22 @@ struct UpcomingAssignmentsView: View {
 
                     VStack(spacing: 2) {
 
-                        Text(
-                            "Upcoming Assignments"
-                        )
-                        .font(.headline)
+                        Text("Upcoming Assignments")
+                            .font(.headline)
 
-                        Text(
-                            appState.session?
-                                .clientName
-                            ?? ""
-                        )
-                        .font(.caption)
-                        .foregroundStyle(
-                            .secondary
-                        )
+                        Text(appState.session?.clientName ?? "")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Text("Hello \(appState.session?.memberName ?? "")!")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
                     }
                 }
+            }
+            .safeAreaInset(edge: .bottom) {
 
-                ToolbarItem(
-                    placement:
-                        .topBarLeading
-                ) {
+                HStack {
 
                     NavigationLink {
 
@@ -185,25 +180,35 @@ struct UpcomingAssignmentsView: View {
 
                     } label: {
 
-                        Text("TASK")
-                            .font(.caption)
-                            .foregroundStyle(
-                                .secondary
-                            )
+                        VStack(spacing: 4) {
+
+                            Image(systemName: "checklist")
+
+                            Text("Tasks")
+                                .font(.caption2)
+                        }
                     }
-                }
 
-                ToolbarItem(
-                    placement:
-                        .topBarTrailing
-                ) {
+                    Spacer()
 
-                    Button(
-                        "Logout"
-                    ) {
+                    Button {
+
                         appState.logout()
+
+                    } label: {
+
+                        VStack(spacing: 4) {
+
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+
+                            Text("Logout")
+                                .font(.caption2)
+                        }
                     }
                 }
+                .padding(.horizontal, 40)
+                .padding(.vertical, 12)
+                .background(.ultraThinMaterial)
             }
             .task {
                 await vm.load(

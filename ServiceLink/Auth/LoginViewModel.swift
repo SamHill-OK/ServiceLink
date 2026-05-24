@@ -20,7 +20,10 @@ final class LoginViewModel: ObservableObject {
                 email: email,
                 password: password
             )
-
+            print(
+                "AllowPublicTaskRequests =",
+                response.allowPublicTaskRequests as Any
+            )
             appState.session =
                 ServiceLinkSession(
                     memberId: response.memberID,

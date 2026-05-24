@@ -8,34 +8,34 @@
 import SwiftUI
 
 struct TaskChoicesView: View {
-
+    
     @EnvironmentObject var appState: AppState
     @StateObject private var vm = TaskChoicesViewModel()
-
+    
     var body: some View {
-
+        
         VStack(spacing: 16) {
-
+            
             if vm.isLoading {
-
+                
                 ProgressView()
-
+                
             } else if let error = vm.errorMessage {
-
+                
                 Text(error)
                     .foregroundStyle(.red)
-
+                
             } else {
-
+                
                 Text("Task Choices")
                     .font(.headline)
-
+                
                 memberPicker
-
+                
                 Text(
                     "Selected: \(vm.selectedMember?.memberName ?? "None")"
                 )
-
+                
                 taskList
             }
         }
@@ -44,20 +44,20 @@ struct TaskChoicesView: View {
             await vm.loadMembers(appState: appState)
         }
     }
-
+    
     private var memberPicker: some View {
-
+        
         Group {
-
+            
             if vm.members.count > 1 {
-
+                
                 Picker(
                     "Member",
                     selection: $vm.selectedMember
                 ) {
-
+                    
                     ForEach(vm.members) { member in
-
+                        
                         Text(member.memberName)
                             .tag(member as ServiceLinkTaskChoiceMember?)
                     }
@@ -65,9 +65,9 @@ struct TaskChoicesView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
                 .onChange(of: vm.selectedMember) { _, newValue in
-
+                    
                     if let newValue {
-
+                        
                         Task {
                             await vm.loadChoices(
                                 memberId: newValue.memberId,
@@ -79,21 +79,29 @@ struct TaskChoicesView: View {
             }
         }
     }
-
+    
     private var taskList: some View {
 
-        List {
+        let groups = vm.groupedChoices
 
-            ForEach(vm.choices) { choice in
+        return List {
+
+            ForEach(
+                Array(groups.enumerated()),
+                id: \.element.id
+            ) { _, group in
 
                 HStack {
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(
+                        alignment: .leading,
+                        spacing: 4
+                    ) {
 
-                        Text(choice.worshipName)
+                        Text(group.worshipName)
                             .font(.headline)
 
-                        Text("\(choice.worshipDay) • \(choice.worshipSession)")
+                        Text("\(group.worshipDay) • \(group.worshipSession)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -105,21 +113,21 @@ struct TaskChoicesView: View {
                         Button {
 
                             Task {
-                                await vm.requestChoice(
-                                    choice: choice,
+                                await vm.requestChoiceGroup(
+                                    group: group,
                                     appState: appState
                                 )
                             }
 
                         } label: {
 
-                            choiceIcon(choice)
+                            choiceIcon(group)
                         }
                         .buttonStyle(.plain)
 
                     } else {
 
-                        choiceIcon(choice)
+                        choiceIcon(group)
                     }
                 }
             }
@@ -127,17 +135,17 @@ struct TaskChoicesView: View {
     }
 
     private func choiceIcon(
-        _ choice: ServiceLinkTaskChoice
+        _ group: ServiceLinkTaskChoiceGroup
     ) -> some View {
 
         Image(
             systemName:
-                choice.onFlag
+                group.isOn
             ? "checkmark.circle.fill"
             : "circle"
         )
         .foregroundStyle(
-            choice.onFlag
+            group.isOn
             ? .green
             : .gray
         )
