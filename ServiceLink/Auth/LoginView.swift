@@ -11,7 +11,14 @@ struct LoginView: View {
 
     @EnvironmentObject var appState: AppState
     @StateObject private var vm = LoginViewModel()
+    @State private var showUpdateAlert = false
 
+    @State private var updateRequired = false
+
+    @State private var updateMessage = ""
+
+    @State private var appStoreUrl = ""
+    
     var body: some View {
         VStack(spacing: 20) {
             
@@ -21,21 +28,8 @@ struct LoginView: View {
                 .scaledToFit()
                 .frame(height: 220)
                 .padding(.horizontal)
-            /*Image("WspBackground")
-             .resizable()
-             .scaledToFill()
-             .frame(height: 220)
-             .clipShape(
-             RoundedRectangle(
-             cornerRadius: 24
-             )
-             )*/
                 .padding(.horizontal)
-            
-            /*Text("ServiceLink")
-             .font(.largeTitle)
-             .fontWeight(.semibold)*/
-            
+                       
             Text("Sign in to view your assignments")
                 .foregroundStyle(.secondary)
             
@@ -87,6 +81,91 @@ struct LoginView: View {
                     .offset(y: -8)
             }
             .padding(.bottom, 16)
+        }
+        .task {
+            await checkForAppUpdate()
+        }
+        .alert(
+            updateRequired
+            ? "Update Required"
+            : "Update Available",
+
+            isPresented:
+                $showUpdateAlert
+        ) {
+
+            Button("Update") {
+
+                guard let url =
+                    URL(
+                        string:
+                            appStoreUrl
+                    )
+                else {
+                    return
+                }
+
+                UIApplication.shared
+                    .open(url)
+            }
+
+            if !updateRequired {
+
+                Button(
+                    "Later",
+                    role:.cancel
+                ) { }
+            }
+
+        } message: {
+
+            Text(updateMessage)
+        }
+    }
+    private func checkForAppUpdate()
+    async {
+
+        let result =
+            await
+            MobileVersionService
+                .shared
+                .checkIosVersion()
+
+        await MainActor.run {
+
+            switch result {
+
+            case .current:
+                break
+
+            case .updateAvailable(
+                let info
+            ):
+
+                updateRequired = false
+
+                updateMessage =
+                    info.updateMessage
+
+                appStoreUrl =
+                    info.appStoreUrl
+
+                showUpdateAlert = true
+
+            case .updateRequired(
+                let info
+            ):
+
+                updateRequired = true
+
+                updateMessage =
+                    info.updateMessage
+
+                appStoreUrl =
+                    info.appStoreUrl
+
+                showUpdateAlert = true
+            }
         }
     }
 }
