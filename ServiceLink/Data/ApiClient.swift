@@ -319,7 +319,8 @@ final class ApiClient {
         }
 
         let body = [
-            "email": email
+            "email": email,
+            "source": "servicelink"
         ]
 
         var request = URLRequest(url: url)
