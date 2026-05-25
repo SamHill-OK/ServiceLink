@@ -10,6 +10,7 @@ final class LoginViewModel: ObservableObject {
     @Published var isLoading = false
 
     func login(appState: AppState) async {
+        //print("LOGIN VIEWMODEL STARTED")
         errorMessage = nil
         isLoading = true
 
@@ -40,4 +41,5 @@ final class LoginViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
+    
 }

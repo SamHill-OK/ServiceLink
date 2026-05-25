@@ -307,5 +307,101 @@ final class ApiClient {
             throw URLError(.badServerResponse)
         }
     }
+    func forgotPassword(
+        email: String
+    ) async throws {
+
+        guard let url = URL(
+            string:
+            "\(ApiConfig.baseUrl)/api/Login/ForgotPassword"
+        ) else {
+            throw URLError(.badURL)
+        }
+
+        let body = [
+            "email": email
+        ]
+
+        var request = URLRequest(url: url)
+
+        request.httpMethod = "POST"
+
+        request.setValue(
+            "application/json",
+            forHTTPHeaderField:
+                "Content-Type"
+        )
+
+        request.httpBody =
+            try JSONSerialization.data(
+                withJSONObject: body
+            )
+
+        let (_, response) =
+            try await URLSession.shared.data(
+                for: request
+            )
+
+        guard let http =
+            response as? HTTPURLResponse,
+              (200...299)
+                .contains(
+                    http.statusCode
+                )
+        else {
+            throw URLError(
+                .badServerResponse
+            )
+        }
+    }
+
+    func requestServiceLinkAccount(
+        email: String
+    ) async throws {
+
+        guard let url = URL(
+            string:
+            "\(ApiConfig.baseUrl)/api/ServiceLinkAccount/RequestServiceLinkAccount"
+        ) else {
+            throw URLError(.badURL)
+        }
+
+        let body = [
+            "email": email
+        ]
+
+        var request = URLRequest(url: url)
+
+        request.httpMethod = "POST"
+
+        request.setValue(
+            "application/json",
+            forHTTPHeaderField:
+                "Content-Type"
+        )
+
+        request.httpBody =
+            try JSONSerialization.data(
+                withJSONObject: body
+            )
+
+        let (_, response) =
+            try await URLSession.shared.data(
+                for: request
+            )
+
+        guard let http =
+            response as? HTTPURLResponse,
+              (200...299)
+                .contains(
+                    http.statusCode
+                )
+        else {
+            throw URLError(
+                .badServerResponse
+            )
+        }
+    }
+    
     
 }

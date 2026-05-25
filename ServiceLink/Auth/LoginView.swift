@@ -18,6 +18,11 @@ struct LoginView: View {
     @State private var updateMessage = ""
 
     @State private var appStoreUrl = ""
+    @State private var showForgotPasswordSheet = false
+    @State private var showSetupAccountSheet = false
+    
+    
+ 
     
     var body: some View {
         VStack(spacing: 20) {
@@ -53,6 +58,7 @@ struct LoginView: View {
             }
             
             Button {
+                //print("LOGIN BUTTON TAPPED")
                 Task {
                     await vm.login(appState: appState)
                 }
@@ -67,6 +73,19 @@ struct LoginView: View {
             .buttonStyle(.borderedProminent)
             .disabled(vm.isLoading)
             Spacer()
+            
+            HStack(spacing: 24) {
+
+                Button("Forgot Password?") {
+                    showForgotPasswordSheet = true
+                }
+                .font(.caption)
+
+                Button("Set Up Account") {
+                    showSetupAccountSheet = true
+                }
+                .font(.caption)
+            }
             
             VStack(spacing: 2) {
                 
@@ -84,6 +103,13 @@ struct LoginView: View {
         }
         .task {
             await checkForAppUpdate()
+        }
+        .sheet(isPresented: $showForgotPasswordSheet) {
+            AccountHelpSheet(mode: .forgotPassword)
+        }
+
+        .sheet(isPresented: $showSetupAccountSheet) {
+            AccountHelpSheet(mode: .setupAccount)
         }
         .alert(
             updateRequired
