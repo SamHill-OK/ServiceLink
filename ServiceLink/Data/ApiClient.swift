@@ -7,11 +7,39 @@
 
 import Foundation
 
+enum ApiError: Error, LocalizedError {
+    case invalidUrl
+    case http(Int, String)
+    case decoding(Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidUrl:
+            return "Invalid URL"
+        case .http(let code, let body):
+            return "Server error (\(code)). \(body)"
+        case .decoding(let err):
+            return "Decode failed: \(err.localizedDescription)"
+        }
+    }
+}
+
 final class ApiClient {
 
     static let shared = ApiClient()
 
     private init() { }
+    
+    private let decoder: JSONDecoder = {
+        let d = JSONDecoder()
+        return d
+    }()
+
+    private let encoder: JSONEncoder = {
+        let e = JSONEncoder()
+        return e
+    }()
+    
 
     func login(
         email: String,
@@ -404,5 +432,75 @@ final class ApiClient {
         }
     }
     
+    //----------------------
+    private func buildUrl(_ path: String, query: [URLQueryItem]) throws -> URL {
+        guard var comps = URLComponents(string: "\(ApiConfig.baseUrl)\(path)") else {
+            throw ApiError.invalidUrl
+        }
+        if !query.isEmpty { comps.queryItems = query }
+        guard let url = comps.url else { throw ApiError.invalidUrl }
+        return url
+    }
+    private func validate(resp: URLResponse, data: Data) throws {
+        guard let http = resp as? HTTPURLResponse else { return }
+        guard (200...299).contains(http.statusCode) else {
+            let body = String(decoding: data, as: UTF8.self)
+            throw ApiError.http(http.statusCode, body)
+        }
+    }
+    func getEotmElders(clientId: Int) async throws -> [EotmElderOptionDto] {
+        let url = try buildUrl(
+            "/api/Eotm/elders",
+            query: [
+                URLQueryItem(name: "clientId", value: String(clientId))
+            ]
+        )
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        try validate(resp: resp, data: data)
+
+        
+
+        do { return try decoder.decode([EotmElderOptionDto].self, from: data) }
+        catch { throw ApiError.decoding(error) }
+    }
+
+    func replaceEotm(clientId: Int, eotmId: Int, newElderId: Int) async throws {
+        let query = [
+            URLQueryItem(name: "clientId", value: String(clientId)),
+            URLQueryItem(name: "eotmId", value: String(eotmId)),
+            URLQueryItem(name: "newElderId", value: String(newElderId))
+        ]
+
+        let url = try buildUrl("/api/Eotm/replace-elder", query: query)
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "PUT"
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        try validate(resp: resp, data: data)
+    }
+    
+    func swapEotm(clientId: Int, firstEotmId: Int, secondEotmId: Int) async throws {
+        let url = try buildUrl("/api/Eotm/swap", query: [])
+
+        let body: [String: Any] = [
+            "clientId": clientId,
+            "firstEotmId": firstEotmId,
+            "secondEotmId": secondEotmId
+        ]
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "PUT"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        try validate(resp: resp, data: data)
+    }
     
 }

@@ -18,4 +18,11 @@ struct ServiceLinkSession: Codable {
 
     let token: String
     let allowPublicTaskRequests: Bool
+    
+    let elderFlag: Bool
+    let useElderTools: Bool
+    
+    var isAdmin: Bool {
+        roleId < 3
+    }
 }

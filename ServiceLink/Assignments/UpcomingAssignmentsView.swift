@@ -17,9 +17,12 @@ struct UpcomingAssignmentsView: View {
     @State private var pendingReply: String?
 
     @State private var showReplyConfirm = false
+    
 
     @StateObject private var vm =
         UpcomingAssignmentsViewModel()
+    @StateObject private var elderToolsVm = ElderToolsViewModel()
+    
     private var groupedAssignments: [(memberName: String, items: [ServiceLinkAssignment])] {
         Dictionary(grouping: vm.assignments) { item in
             item.memberName
@@ -175,15 +178,10 @@ struct UpcomingAssignmentsView: View {
                 HStack {
 
                     NavigationLink {
-
                         TaskChoicesView()
-
                     } label: {
-
                         VStack(spacing: 4) {
-
                             Image(systemName: "checklist")
-
                             Text("Tasks")
                                 .font(.caption2)
                         }
@@ -191,16 +189,31 @@ struct UpcomingAssignmentsView: View {
 
                     Spacer()
 
+                    if appState.session?.elderFlag == true &&
+                       appState.session?.useElderTools == true {
+                        NavigationLink {
+                            ElderToolsHomeView(vm: elderToolsVm)
+                                .onAppear {
+                                    if let session = appState.session {
+                                        elderToolsVm.configure(session: session)
+                                    }
+                                }
+                        } label: {
+                            VStack(spacing: 4) {
+                                Image(systemName: "person.2.badge.gearshape")
+                                Text("Elders")
+                                    .font(.caption2)
+                            }
+                        }
+
+                        Spacer()
+                    }
+
                     Button {
-
                         appState.logout()
-
                     } label: {
-
                         VStack(spacing: 4) {
-
                             Image(systemName: "rectangle.portrait.and.arrow.right")
-
                             Text("Logout")
                                 .font(.caption2)
                         }

@@ -24,5 +24,8 @@ struct LoginResponse: Codable {
 
     let token: String
     let allowPublicTaskRequests: Bool?
+    
+    let elderFlag: Bool
+    let useElderTools: Bool
 
 }
