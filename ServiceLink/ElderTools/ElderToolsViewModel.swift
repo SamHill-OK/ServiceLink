@@ -14,7 +14,14 @@ final class ElderToolsViewModel: ObservableObject {
 
     @Published var eotmList: [EotmDto] = []
     @Published var eotmElders: [EotmElderOptionDto] = []
+    
+    @Published var meetings: [ElderMeetingDto] = []
 
+    @Published var selectedMeeting: ElderMeetingDetailDto?
+
+    @Published var isLoadingMeetings = false
+    @Published var isShowingCreateMeeting = false
+    
     func configure(session: ServiceLinkSession) {
         self.session = session
     }
@@ -284,4 +291,253 @@ final class ElderToolsViewModel: ObservableObject {
             print("❌ swapEotm failed:", error.localizedDescription)
         }
     }
+    
+    // MARK: - Elders Meetings
+    func loadMeetings() async {
+        guard let session else { return }
+
+        guard let url = URL(
+            string: "\(ApiConfig.baseUrl)/api/eldertools/meeting/future"
+        ) else {
+            return
+        }
+
+        isLoadingMeetings = true
+        defer { isLoadingMeetings = false }
+
+        var request = URLRequest(url: url)
+
+        request.setValue(
+            "\(session.clientId)",
+            forHTTPHeaderField: "X-ClientID"
+        )
+
+        request.setValue(
+            "\(session.memberId)",
+            forHTTPHeaderField: "X-UserID"
+        )
+
+        do {
+
+            let (data, response) =
+                try await URLSession.shared.data(
+                    for: request
+                )
+
+            guard (response as? HTTPURLResponse)?
+                .statusCode == 200 else {
+                return
+            }
+
+            let decoder = elderMeetingDecoder()
+
+            meetings = try decoder.decode(
+                [ElderMeetingDto].self,
+                from: data
+            )
+
+        } catch {
+
+            print("❌ loadMeetings:", error)
+
+        }
+    }
+    
+    private func elderMeetingDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let value = try container.decode(String.self)
+
+            let formats = [
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                "yyyy-MM-dd'T'HH:mm:ss"
+            ]
+
+            for format in formats {
+                let formatter = DateFormatter()
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.dateFormat = format
+
+                if let date = formatter.date(from: value) {
+                    return date
+                }
+            }
+
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Invalid date: \(value)"
+            )
+        }
+
+        return decoder
+    }
+    func loadMeetingDetail(meetingId: Int) async {
+        guard let session else { return }
+
+        guard let url = URL(
+            string: "\(ApiConfig.baseUrl)/api/eldertools/meeting/\(meetingId)"
+        ) else {
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue("\(session.clientId)", forHTTPHeaderField: "X-ClientID")
+        request.setValue("\(session.memberId)", forHTTPHeaderField: "X-UserID")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                print("❌ loadMeetingDetail failed")
+                return
+            }
+
+            let decoder = elderMeetingDecoder()
+
+            selectedMeeting = try decoder.decode(
+                ElderMeetingDetailDto.self,
+                from: data
+            )
+
+        } catch {
+            print("❌ loadMeetingDetail:", error)
+        }
+    }
+    func createMeeting(
+        title: String,
+        meetingDate: Date,
+        notes: String
+    ) async -> Bool {
+        guard let session else { return false }
+
+        guard let url = URL(
+            string: "\(ApiConfig.baseUrl)/api/eldertools/meeting/create"
+        ) else {
+            return false
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("\(session.clientId)", forHTTPHeaderField: "X-ClientID")
+        request.setValue("\(session.memberId)", forHTTPHeaderField: "X-UserID")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+
+        let payload: [String: Any] = [
+            "meetingTitle": title,
+            "meetingDate": formatter.string(from: meetingDate),
+            "notes": notes
+        ]
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+            let (_, response) = try await URLSession.shared.data(for: request)
+
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                return false
+            }
+
+            await loadMeetings()
+            return true
+
+        } catch {
+            print("❌ createMeeting:", error)
+            return false
+        }
+    }
+    func updateMeeting(
+        meetingId: Int,
+        title: String,
+        meetingDate: Date,
+        notes: String
+    ) async -> Bool {
+        guard let session else { return false }
+
+        guard let url = URL(string: "\(ApiConfig.baseUrl)/api/eldertools/meeting/update") else {
+            return false
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("\(session.clientId)", forHTTPHeaderField: "X-ClientID")
+        request.setValue("\(session.memberId)", forHTTPHeaderField: "X-UserID")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+
+        let payload: [String: Any] = [
+            "elderMeetingId": meetingId,
+            "meetingTitle": title,
+            "meetingDate": formatter.string(from: meetingDate),
+            "notes": notes
+        ]
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+            let (_, response) = try await URLSession.shared.data(for: request)
+
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                return false
+            }
+
+            await loadMeetings()
+            await loadMeetingDetail(meetingId: meetingId)
+
+            return true
+
+        } catch {
+            print("❌ updateMeeting:", error)
+            return false
+        }
+    }
+    func cancelMeeting(
+        meetingId: Int,
+        reason: String
+    ) async -> Bool {
+        guard let session else { return false }
+
+        guard let url = URL(string: "\(ApiConfig.baseUrl)/api/eldertools/meeting/cancel") else {
+            return false
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("\(session.clientId)", forHTTPHeaderField: "X-ClientID")
+        request.setValue("\(session.memberId)", forHTTPHeaderField: "X-UserID")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let payload: [String: Any] = [
+            "elderMeetingId": meetingId,
+            "cancelReason": reason
+        ]
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+            let (_, response) = try await URLSession.shared.data(for: request)
+
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                return false
+            }
+
+            await loadMeetings()
+            
+
+            return true
+
+        } catch {
+            print("❌ cancelMeeting:", error)
+            return false
+        }
+    }
+    
 }
