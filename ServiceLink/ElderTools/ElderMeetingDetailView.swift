@@ -13,6 +13,9 @@ struct ElderMeetingDetailView: View {
     @State private var isShowingEditMeeting = false
     @State private var isShowingCancelMeeting = false
     @Environment(\.dismiss) private var dismiss
+    @State private var isShowingAddGuest = false
+    @State private var selectedGuest: ElderMeetingGuestDto?
+    //@State private var isShowingEditGuest = false
     
     let meetingId: Int
 
@@ -60,9 +63,19 @@ struct ElderMeetingDetailView: View {
                         RoundedRectangle(cornerRadius: 22)
                     )
 
-                    Label("Guests",
-                          systemImage: "person.2")
-                        .font(.headline)
+                    HStack {
+                        Label("Guests", systemImage: "person.2")
+                            .font(.headline)
+
+                        Spacer()
+
+                        Button {
+                            isShowingAddGuest = true
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title3)
+                        }
+                    }
 
                     if meeting.guests.isEmpty {
 
@@ -73,45 +86,61 @@ struct ElderMeetingDetailView: View {
 
                         ForEach(meeting.guests) { guest in
 
-                            VStack(alignment: .leading,
-                                   spacing: 4) {
+                            Button {
 
-                                Text(guest.memberName)
-                                    .font(.headline)
+                                //print("🎯 Guest tapped: \(guest.memberName)")
 
-                                if let guestTime = guest.guestTime,
-                                   !guestTime.isEmpty {
+                                selectedGuest = guest
+                                //isShowingEditGuest = true
 
-                                    Text(formatGuestTime(guestTime))
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                            } label: {
+
+                                VStack(alignment: .leading,
+                                       spacing: 4) {
+
+                                    Text(guest.memberName)
+                                        .font(.headline)
+
+                                    if let guestTime = guest.guestTime,
+                                       !guestTime.isEmpty {
+
+                                        Text(formatGuestTime(guestTime))
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
+
+                                    if let phone = guest.phoneNumber,
+                                       !phone.isEmpty {
+
+                                        let cleanPhone = phone.filter { $0.isNumber }
+
+                                        if let url = URL(string: "tel://\(cleanPhone)") {
+
+                                            Link(destination: url) {
+                                                Label(phone, systemImage: "phone.fill")
+                                                    .font(.caption)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                    }
+
+                                    if let notes = guest.guestNotes,
+                                       !notes.isEmpty {
+
+                                        Text(notes)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
-
-                                if let phone = guest.phoneNumber,
-                                   !phone.isEmpty {
-
-                                    Label(phone,
-                                          systemImage: "phone.fill")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-
-                                if let notes = guest.guestNotes,
-                                   !notes.isEmpty {
-
-                                    Text(notes)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-
+                                .padding()
+                                .frame(maxWidth: .infinity,
+                                       alignment: .leading)
+                                .background(.white)
+                                .clipShape(
+                                    RoundedRectangle(cornerRadius: 18)
+                                )
                             }
-                            .padding()
-                            .frame(maxWidth: .infinity,
-                                   alignment: .leading)
-                            .background(.white)
-                            .clipShape(
-                                RoundedRectangle(cornerRadius: 18)
-                            )
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -151,6 +180,7 @@ struct ElderMeetingDetailView: View {
                 }
             }
         }
+        //------- S H E E T S ------------------------------
         .sheet(isPresented: $isShowingEditMeeting) {
             if let meeting = vm.selectedMeeting {
                 EditElderMeetingView(
@@ -159,6 +189,23 @@ struct ElderMeetingDetailView: View {
                 )
             }
         }
+        .sheet(isPresented: $isShowingAddGuest) {
+            if let meeting = vm.selectedMeeting {
+                AddElderMeetingGuestView(
+                    vm: vm,
+                    meetingId: meetingId,
+                    defaultGuestTime: meeting.meetingDate
+                )
+            }
+        }
+        .sheet(item: $selectedGuest) { guest in
+            EditElderMeetingGuestView(
+                vm: vm,
+                meetingId: meetingId,
+                guest: guest
+            )
+        }
+        //-----------------------------------------------
         .task {
             await vm.loadMeetingDetail(
                 meetingId: meetingId
