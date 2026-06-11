@@ -50,8 +50,8 @@ struct ElderToolsHomeView: View {
                 )
             }
     
-           /* NavigationLink {
-                ElderMeetingListView(vm: vm)
+            NavigationLink {
+                ElderMeetingListView()
             } label: {
                 ElderTile(
                     title: "Meeting Schedule",
@@ -59,7 +59,6 @@ struct ElderToolsHomeView: View {
                     systemImage: "person.3.sequence.fill"
                 )
             }
-        */
             Spacer()
         }
         .padding()
