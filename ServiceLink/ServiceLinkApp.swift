@@ -11,7 +11,11 @@ import SwiftUI
 struct ServiceLinkApp: App {
 
     @StateObject private var appState = AppState()
-
+    init() {
+        
+        CrashTrail.log("App launched")
+                print("🧨 Last CrashTrail: \(CrashTrail.lastMessage)")
+    }
     var body: some Scene {
 
         WindowGroup {
@@ -25,6 +29,9 @@ struct ServiceLinkApp: App {
 
                 UpcomingAssignmentsView()
                     .environmentObject(appState)
+                    .onAppear {
+                        CrashTrail.log("UpcomingAssignments appeared")
+                    }
 
             }
         }

@@ -448,6 +448,7 @@ final class ApiClient {
             throw ApiError.http(http.statusCode, body)
         }
     }
+    
     func getEotmElders(clientId: Int) async throws -> [EotmElderOptionDto] {
         let url = try buildUrl(
             "/api/Eotm/elders",
@@ -502,5 +503,6 @@ final class ApiClient {
         let (data, resp) = try await URLSession.shared.data(for: req)
         try validate(resp: resp, data: data)
     }
+    
     
 }

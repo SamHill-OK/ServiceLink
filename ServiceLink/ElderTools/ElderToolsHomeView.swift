@@ -9,13 +9,15 @@ import SwiftUI
 
 struct ElderToolsHomeView: View {
 
-    @ObservedObject var vm: ElderToolsViewModel
+    
+    @EnvironmentObject var appState: AppState
+    @StateObject private var eotmVm = EotmViewModel()
 
     var body: some View {
         VStack(spacing: 20) {
 
             NavigationLink {
-                ReachOutView(vm: vm)
+                ReachOutView()
             } label: {
                 ElderTile(
                     title: "Connection Tool",
@@ -23,7 +25,7 @@ struct ElderToolsHomeView: View {
                     systemImage: "phone.fill"
                 )
             }
-
+            /*
             NavigationLink {
                 AddGoForwardView(vm: vm)
             } label: {
@@ -33,9 +35,15 @@ struct ElderToolsHomeView: View {
                     systemImage: "person.crop.circle.badge.plus"
                 )
             }
-            
+  */
+  
             NavigationLink {
-                EotmView(vm: vm)
+                EotmView(vm: eotmVm)
+                    .onAppear {
+                        if let session = appState.session {
+                            eotmVm.configure(session: session)
+                        }
+                    }
             } label: {
                 ElderTile(
                     title: "Elder of the Month",
@@ -43,7 +51,8 @@ struct ElderToolsHomeView: View {
                     systemImage: "calendar"
                 )
             }
-            NavigationLink {
+    
+           /* NavigationLink {
                 ElderMeetingListView(vm: vm)
             } label: {
                 ElderTile(
@@ -52,7 +61,7 @@ struct ElderToolsHomeView: View {
                     systemImage: "person.3.sequence.fill"
                 )
             }
-
+        */
             Spacer()
         }
         .padding()

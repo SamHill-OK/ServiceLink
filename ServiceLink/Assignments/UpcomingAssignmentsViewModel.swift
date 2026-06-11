@@ -35,6 +35,13 @@ final class UpcomingAssignmentsViewModel: ObservableObject {
                     clientId: session.clientId,
                     memberId: session.memberId
                 )
+
+        } catch let error as URLError where error.code == .cancelled {
+            return
+
+        } catch is CancellationError {
+            return
+
         } catch {
             errorMessage = error.localizedDescription
         }

@@ -22,7 +22,14 @@ final class AppState: ObservableObject {
     }
 
     init() {
+
         self.session = SessionStore.shared.load()
+
+        if session != nil {
+            CrashTrail.log("Session restored")
+        } else {
+            CrashTrail.log("No saved session")
+        }
     }
 
     func logout() {

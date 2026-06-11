@@ -1,15 +1,24 @@
+//
+//  EotmView.swift
+//  ServiceLink
+//
+//  Created by Michael Anderson on 6/10/26.
+//
+
 import SwiftUI
 
 struct EotmView: View {
 
-    @ObservedObject var vm: ElderToolsViewModel
+    @ObservedObject var vm: EotmViewModel
 
     @State private var swapMode = false
     @State private var selectedForSwap: Set<Int> = []
-    @State private var selectedEotm: EotmDto?
     @State private var showSwapConfirm = false
+    @State private var hasLoaded = false
+    @State private var selectedEotm: EotmDto?
 
     var body: some View {
+
         List {
             ForEach(vm.eotmList) { item in
                 EotmRow(
@@ -27,6 +36,42 @@ struct EotmView: View {
                     } else {
                         selectedEotm = item
                     }
+                }
+            }
+        }
+        .navigationTitle("Elder of the Month")
+        .toolbar {
+            if vm.session?.isAdmin == true {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(swapMode ? "Swap" : "Swap") {
+                        if swapMode {
+                            if selectedForSwap.count == 2 {
+                                showSwapConfirm = true
+                            }
+                        } else {
+                            swapMode = true
+                        }
+                    }
+                    .disabled(swapMode && selectedForSwap.count != 2)
+                }
+
+                if swapMode {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Cancel") {
+                            swapMode = false
+                            selectedForSwap.removeAll()
+                        }
+                    }
+                }
+            }
+
+            ToolbarItem(placement: .bottomBar) {
+                Button {
+                    Task {
+                        await vm.load()
+                    }
+                } label: {
+                    Label("Refresh", systemImage: "arrow.clockwise")
                 }
             }
         }
@@ -78,35 +123,10 @@ struct EotmView: View {
         } message: {
             Text("This will swap the selected months.")
         }
-        .navigationTitle("Elder of the Month")
-        .toolbar {
-            if vm.session?.isAdmin == true {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(swapMode ? "Swap" : "Swap") {
-                        if swapMode {
-                            if selectedForSwap.count == 2 {
-                                showSwapConfirm = true
-                            }
-                        } else {
-                            swapMode = true
-                        }
-                    }
-                    .disabled(swapMode && selectedForSwap.count != 2)
-                }
-
-                if swapMode {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Cancel") {
-                            swapMode = false
-                            selectedForSwap.removeAll()
-                        }
-                    }
-                }
-            }
-        }
         .task {
-            await vm.loadEotmList()
-            await vm.loadEotmElders()
+            guard !hasLoaded else { return }
+            hasLoaded = true
+            await vm.load()
         }
     }
 
@@ -137,7 +157,7 @@ private struct EotmRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(item.monthName) \(item.calYear)")
+                Text(item.monthName + " " + String(item.calYear))
                     .font(.headline)
 
                 Text(item.elderName ?? "Unassigned")

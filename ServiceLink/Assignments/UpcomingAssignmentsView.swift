@@ -17,11 +17,12 @@ struct UpcomingAssignmentsView: View {
     @State private var pendingReply: String?
 
     @State private var showReplyConfirm = false
+    @State private var isInElderTools = false
     
 
     @StateObject private var vm =
         UpcomingAssignmentsViewModel()
-    @StateObject private var elderToolsVm = ElderToolsViewModel()
+    
     
     private var groupedAssignments: [(memberName: String, items: [ServiceLinkAssignment])] {
         Dictionary(grouping: vm.assignments) { item in
@@ -186,18 +187,13 @@ struct UpcomingAssignmentsView: View {
                                 .font(.caption2)
                         }
                     }
-
                     Spacer()
 
                     if appState.session?.elderFlag == true &&
                        appState.session?.useElderTools == true {
+
                         NavigationLink {
-                            ElderToolsHomeView(vm: elderToolsVm)
-                                .onAppear {
-                                    if let session = appState.session {
-                                        elderToolsVm.configure(session: session)
-                                    }
-                                }
+                            ElderToolsHomeView()
                         } label: {
                             VStack(spacing: 4) {
                                 Image(systemName: "person.2.badge.gearshape")
@@ -206,8 +202,11 @@ struct UpcomingAssignmentsView: View {
                             }
                         }
 
-                        Spacer()
+                       
                     }
+                    Spacer()
+
+                    
 
                     Button {
                         appState.logout()
