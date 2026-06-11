@@ -25,17 +25,15 @@ struct ElderToolsHomeView: View {
                     systemImage: "phone.fill"
                 )
             }
-            /*
             NavigationLink {
-                AddGoForwardView(vm: vm)
+                AddGoForwardView()
             } label: {
                 ElderTile(
                     title: "Go Forward Follow-Up",
-                    subtitle: "Track prayer & repentance requests",
+                    subtitle: "Add a member for follow-up",
                     systemImage: "person.crop.circle.badge.plus"
                 )
             }
-  */
   
             NavigationLink {
                 EotmView(vm: eotmVm)

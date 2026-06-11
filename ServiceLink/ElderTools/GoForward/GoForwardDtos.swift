@@ -24,3 +24,14 @@ struct GoForwardRecentDto: Codable, Identifiable {
 
     var id: Int { goForwardId }
 }
+import Foundation
+
+struct MemberLookupDto: Codable, Identifiable {
+
+    let memberID: Int
+    let firstName: String
+    let lastName: String
+    let phoneNumber: String?
+
+    var id: Int { memberID }
+}
