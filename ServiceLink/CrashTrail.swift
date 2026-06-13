@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 
 enum CrashTrail {
-    private static let sqlLoggingEnabled = true
+    private static let sqlLoggingEnabled = false
 
     static func log(_ message: String, screenName: String? = nil) {
 
