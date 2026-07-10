@@ -1,13 +1,15 @@
 //
-//  ElderMeetingListView.swift
+//  ElderMeetingHistoryView.swift
 //  ServiceLink
 //
-//  Created by Michael Anderson on 6/11/26.
+//  Created by Michael Anderson on 7/10/26.
 //
+
+
 
 import SwiftUI
 
-struct ElderMeetingListView: View {
+struct ElderMeetingHistoryView: View {
 
     @EnvironmentObject var appState: AppState
     @StateObject private var vm = ElderMeetingListViewModel()
@@ -73,40 +75,25 @@ struct ElderMeetingListView: View {
             }
             .padding()
         }
-        .navigationTitle("Meetings")
+        .navigationTitle("Meeting History")
         .toolbar {
 
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    isShowingCreateMeeting = true
-                } label: {
-                    Image(systemName: "plus")
-                }
-            }
-
-            ToolbarItem(placement: .topBarTrailing) {
+           ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task {
-                        await vm.loadMeetings()
+                        await vm.loadMeetings(type: .past)
                     }
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink {
-                    ElderMeetingHistoryView()
-                        .environmentObject(appState)
-                } label: {
-                    Image(systemName: "clock.arrow.circlepath")
-                }
-            }
+            
         }
         .sheet(
             isPresented: $isShowingCreateMeeting,
             onDismiss: {
                 Task {
-                    await vm.loadMeetings(type: .future)
+                    await vm.loadMeetings()
                 }
             }
         ) {
@@ -120,7 +107,7 @@ struct ElderMeetingListView: View {
                 vm.configure(session: session)
 
                 Task {
-                    await vm.loadMeetings()
+                    await vm.loadMeetings(type: .past)
                 }
             }
         }

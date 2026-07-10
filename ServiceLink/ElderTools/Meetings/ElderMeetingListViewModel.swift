@@ -8,6 +8,12 @@
 import Foundation
 import Combine
 
+enum MeetingListType {
+    case future
+    case past
+}
+
+
 @MainActor
 final class ElderMeetingListViewModel: ObservableObject {
 
@@ -20,12 +26,21 @@ final class ElderMeetingListViewModel: ObservableObject {
         self.session = session
     }
     
-    func loadMeetings() async {
+    func loadMeetings(type: MeetingListType = .future) async {
 
         guard let session else { return }
 
+        let endpoint: String
+
+        switch type {
+        case .future:
+            endpoint = "future"
+        case .past:
+            endpoint = "past"
+        }
+
         guard let url = URL(
-            string: "\(ApiConfig.baseUrl)/api/eldertools/meeting/future"
+            string: "\(ApiConfig.baseUrl)/api/eldertools/meeting/\(endpoint)"
         ) else {
             return
         }
