@@ -503,6 +503,83 @@ final class ApiClient {
         let (data, resp) = try await URLSession.shared.data(for: req)
         try validate(resp: resp, data: data)
     }
-    
-    
+    func getMeetingNote(
+        clientId: Int,
+        userId: Int,
+        elderMeetingId: Int,
+        noteType: MeetingNoteType
+    ) async throws -> ElderMeetingNoteDto? {
+        let url = try buildUrl("/api/eldertools/meeting/\(elderMeetingId)/note/\(noteType.rawValue)", query: [])
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+        req.setValue(String(clientId), forHTTPHeaderField: "X-ClientID")
+        req.setValue(String(userId), forHTTPHeaderField: "X-UserID")
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+
+        if let http = resp as? HTTPURLResponse {
+
+            print("📌 getElderMeetingNote Status: \(http.statusCode)")
+
+            if let body = String(data: data, encoding: .utf8) {
+                print("📌 Response Body:")
+                print(body)
+            }
+
+            if http.statusCode == 204 {
+                return nil
+            }
+        }
+
+        try validate(resp: resp, data: data)
+
+        do {
+            return try decoder.decode(ElderMeetingNoteDto.self, from: data)
+        } catch {
+            throw ApiError.decoding(error)
+        }
+    }
+    func saveMeetingNote(
+        clientId: Int,
+        userId: Int,
+        elderMeetingId: Int,
+        noteType: MeetingNoteType,
+        noteTitle: String?,
+        noteMarkdown: String
+    ) async throws {
+        let url = try buildUrl("/api/eldertools/meeting/\(elderMeetingId)/note/\(noteType.rawValue)", query: [])
+
+        let body = SaveElderMeetingNoteRequest(
+            noteTitle: noteTitle,
+            noteMarkdown: noteMarkdown
+        )
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue(String(clientId), forHTTPHeaderField: "X-ClientID")
+        req.setValue(String(userId), forHTTPHeaderField: "X-UserID")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try encoder.encode(body)
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        try validate(resp: resp, data: data)
+    }
+    func deleteMeetingNote(
+        clientId: Int,
+        userId: Int,
+        elderMeetingId: Int,
+        noteType: MeetingNoteType
+    ) async throws {
+        let url = try buildUrl("/api/eldertools/meeting/\(elderMeetingId)/note/\(noteType.rawValue)/delete", query: [])
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue(String(clientId), forHTTPHeaderField: "X-ClientID")
+        req.setValue(String(userId), forHTTPHeaderField: "X-UserID")
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        
+        try validate(resp: resp, data: data)
+    }
 }

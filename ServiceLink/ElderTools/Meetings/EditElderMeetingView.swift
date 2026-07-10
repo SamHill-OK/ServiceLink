@@ -19,6 +19,21 @@ struct EditElderMeetingView: View {
     @State private var meetingTitle = ""
     @State private var meetingDate = Date()
     @State private var notes = ""
+    
+ 
+    @State private var showingTranscript = false
+    @State private var showingDeleteTranscript = false
+    
+    @State private var showingTranscriptEditor = false
+    @State private var transcriptTitle = ""
+    @State private var transcriptText = ""
+    
+    @State private var showingSummary = false
+    @State private var showingDeleteSummary = false
+
+    @State private var showingSummaryEditor = false
+    @State private var summaryTitle = ""
+    @State private var summaryText = ""
 
     var body: some View {
 
@@ -44,6 +59,100 @@ struct EditElderMeetingView: View {
                     TextEditor(text: $notes)
                         .frame(minHeight: 150)
                 }
+                
+                Section("Summary") {
+
+                    if let summaryNote = vm.summaryNote {
+
+                        VStack(alignment: .leading, spacing: 8) {
+
+                            Text(summaryNote.noteTitle ?? "Meeting Summary")
+                                .font(.headline)
+
+                            if let createdByName = summaryNote.createdByName {
+                                Text("Added by \(createdByName)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Button("Read Summary") {
+                                showingSummary = true
+                            }
+                            .buttonStyle(.borderless)
+
+                            Button("Delete Summary", role: .destructive) {
+                                showingDeleteSummary = true
+                            }
+                            .buttonStyle(.borderless)
+                        }
+
+                    } else {
+
+                        Text("No summary attached.")
+                            .foregroundStyle(.secondary)
+
+                        Button("Add Summary") {
+                            summaryTitle = "Meeting Summary"
+                            summaryText = ""
+                            showingSummaryEditor = true
+                        }
+                    }
+
+                    if let noteError = vm.noteError {
+                        Text(noteError)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
+                
+                Section("Transcript") {
+
+                    if let externalNote = vm.transcriptNote {
+
+                        VStack(alignment: .leading, spacing: 8) {
+
+                            Text(externalNote.noteTitle ?? "Meeting Note")
+                                .font(.headline)
+
+                            if let createdByName = externalNote.createdByName {
+                                Text("Added by \(createdByName)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Button("Read Transcript") {
+                                showingTranscript = true
+                            }
+                            .buttonStyle(.borderless)
+
+                            Button("Delete Transcript", role: .destructive) {
+                                showingDeleteTranscript = true
+                            }
+                            .buttonStyle(.borderless)
+                        }
+
+                    } else {
+
+                        Text("No transcript attached.")
+                            .foregroundStyle(.secondary)
+
+                        Button("Add Transcript") {
+                            transcriptTitle = "Meeting Transcript"
+                            transcriptText = ""
+                            showingTranscriptEditor = true
+                        }
+                    }
+
+                    if let noteError = vm.noteError {
+                        Text(noteError)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                    
+                }
+                
+                
+                
             }
             .navigationTitle("Edit Meeting")
             .toolbar {
@@ -82,6 +191,15 @@ struct EditElderMeetingView: View {
                 if let session = appState.session {
 
                     vm.configure(session: session)
+                    Task {
+                        await vm.loadTranscript(
+                            meetingId: meeting.elderMeetingId
+                        )
+
+                        await vm.loadSummary(
+                            meetingId: meeting.elderMeetingId
+                        )
+                    }
                 }
 
                 meetingTitle = meeting.meetingTitle
@@ -97,6 +215,214 @@ struct EditElderMeetingView: View {
                     meetingDate = date
                 }
             }
+            
+            .sheet(isPresented: $showingTranscriptEditor) {
+                NavigationStack {
+                    Form {
+                        Section("Title") {
+                            TextField("Transcript title", text: $transcriptTitle)
+                        }
+
+                        Section("Transcript") {
+                            TextEditor(text: $transcriptText)
+                                .frame(minHeight: 350)
+                        }
+                    }
+                    .navigationTitle("Add Transcript")
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                showingTranscriptEditor = false
+                            }
+                        }
+
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Save") {
+                                Task {
+                                    let ok = await vm.saveTranscript(
+                                        meetingId: meeting.elderMeetingId,
+                                        title: transcriptTitle,
+                                        markdown: transcriptText
+                                    )
+
+                                    if ok {
+                                        showingTranscriptEditor = false
+                                        await vm.loadTranscript(
+                                            meetingId: meeting.elderMeetingId
+                                        )
+                                    }
+                                }
+                            }
+                            .disabled(
+                                transcriptText.trimmingCharacters(
+                                    in: .whitespacesAndNewlines
+                                ).isEmpty
+                            )
+                        }
+                    }
+                }
+            }
+            
+            .sheet(isPresented: $showingTranscript) {
+                if let note = vm.transcriptNote {
+                    NavigationStack {
+                        ScrollView {
+                            Text(.init(note.noteMarkdown))
+                                .frame(
+                                    maxWidth: .infinity,
+                                    alignment: .leading
+                                )
+                                .padding()
+                        }
+                        .navigationTitle(
+                            note.noteTitle ?? "Meeting Transcript"
+                        )
+                        .toolbar {
+                            ToolbarItem(
+                                placement: .confirmationAction
+                            ) {
+                                Button("Done") {
+                                    showingTranscript = false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $showingSummaryEditor) {
+                NavigationStack {
+                    Form {
+                        Section("Title") {
+                            TextField(
+                                "Summary title",
+                                text: $summaryTitle
+                            )
+                        }
+
+                        Section("Summary") {
+                            TextEditor(text: $summaryText)
+                                .frame(minHeight: 350)
+                        }
+                    }
+                    .navigationTitle("Add Summary")
+                    .toolbar {
+                        ToolbarItem(
+                            placement: .cancellationAction
+                        ) {
+                            Button("Cancel") {
+                                showingSummaryEditor = false
+                            }
+                        }
+
+                        ToolbarItem(
+                            placement: .confirmationAction
+                        ) {
+                            Button("Save") {
+                                Task {
+                                    let ok = await vm.saveSummary(
+                                        meetingId: meeting.elderMeetingId,
+                                        title: summaryTitle,
+                                        markdown: summaryText
+                                    )
+
+                                    if ok {
+                                        showingSummaryEditor = false
+                                        summaryTitle = ""
+                                        summaryText = ""
+
+                                        await vm.loadSummary(
+                                            meetingId: meeting.elderMeetingId
+                                        )
+                                    }
+                                }
+                            }
+                            .disabled(
+                                summaryText
+                                    .trimmingCharacters(
+                                        in: .whitespacesAndNewlines
+                                    )
+                                    .isEmpty
+                            )
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $showingSummary) {
+                if let note = vm.summaryNote {
+                    NavigationStack {
+                        ScrollView {
+                            Text(.init(note.noteMarkdown))
+                                .frame(
+                                    maxWidth: .infinity,
+                                    alignment: .leading
+                                )
+                                .padding()
+                        }
+                        .navigationTitle(
+                            note.noteTitle ?? "Meeting Summary"
+                        )
+                        .toolbar {
+                            ToolbarItem(
+                                placement: .confirmationAction
+                            ) {
+                                Button("Done") {
+                                    showingSummary = false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .confirmationDialog(
+                "Delete Transcript?",
+                isPresented: $showingDeleteTranscript,
+                titleVisibility: .visible
+            ) {
+                Button("Delete Transcript", role: .destructive) {
+                    Task {
+                        let ok = await vm.deleteTranscript(
+                            meetingId: meeting.elderMeetingId
+                        )
+
+                        if ok {
+                            showingTranscript = false
+                        }
+                    }
+                }
+
+                Button("Cancel", role: .cancel) {
+                }
+            } message: {
+                Text("This will remove the transcript from this meeting.")
+            }
+            
+            .confirmationDialog(
+                "Delete Summary?",
+                isPresented: $showingDeleteSummary,
+                titleVisibility: .visible
+            ) {
+                Button("Delete Summary", role: .destructive) {
+                    Task {
+                        let ok = await vm.deleteSummary(
+                            meetingId: meeting.elderMeetingId
+                        )
+
+                        if ok {
+                            showingSummary = false
+                        }
+                    }
+                }
+
+                Button("Cancel", role: .cancel) {
+                }
+            } message: {
+                Text("This will remove the summary from this meeting.")
+            }
+            
+            
+            
         }
+        
     }
+ 
 }
