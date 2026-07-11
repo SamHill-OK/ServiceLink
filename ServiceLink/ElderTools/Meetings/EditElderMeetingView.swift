@@ -266,14 +266,9 @@ struct EditElderMeetingView: View {
             .sheet(isPresented: $showingTranscript) {
                 if let note = vm.transcriptNote {
                     NavigationStack {
-                        ScrollView {
-                            Text(.init(note.noteMarkdown))
-                                .frame(
-                                    maxWidth: .infinity,
-                                    alignment: .leading
-                                )
-                                .padding()
-                        }
+                        MeetingNoteReaderView(
+                            text: note.noteMarkdown
+                        )
                         .navigationTitle(
                             note.noteTitle ?? "Meeting Transcript"
                         )
@@ -350,14 +345,9 @@ struct EditElderMeetingView: View {
             .sheet(isPresented: $showingSummary) {
                 if let note = vm.summaryNote {
                     NavigationStack {
-                        ScrollView {
-                            Text(.init(note.noteMarkdown))
-                                .frame(
-                                    maxWidth: .infinity,
-                                    alignment: .leading
-                                )
-                                .padding()
-                        }
+                        MeetingNoteReaderView(
+                            text: note.noteMarkdown
+                        )
                         .navigationTitle(
                             note.noteTitle ?? "Meeting Summary"
                         )
