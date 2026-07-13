@@ -49,6 +49,19 @@ struct MeetingNoteReaderView: View {
                 .fontWeight(.semibold)
                 .padding(.top, 4)
 
+        case .speaker:
+            Text(.init(block.text))
+                .font(.headline)
+                .fontWeight(.semibold)
+                .padding(.top, 10)
+
+        case .timestamp:
+            Text(block.text)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .italic()
+                .padding(.top, -8)
+
         case .bullet:
             HStack(
                 alignment: .firstTextBaseline,
@@ -122,6 +135,61 @@ struct MeetingNoteReaderView: View {
                 continue
             }
 
+            // Jamie transcript title.
+            if line.caseInsensitiveCompare(
+                "Meeting Transcript"
+            ) == .orderedSame {
+                flushParagraph()
+
+                blocks.append(
+                    MeetingNoteBlock(
+                        kind: .heading,
+                        text: line
+                    )
+                )
+
+                continue
+            }
+
+            /*
+             Jamie transcript format:
+
+             Robin Anderson
+
+             ###### 00:01 - 00:05
+
+             Transcript text...
+             */
+            if let timestamp = jamieTimestamp(
+                from: line
+            ) {
+                flushParagraph()
+
+                // The block directly before a Jamie timestamp
+                // is the speaker name.
+                if let previousBlock = blocks.last,
+                   previousBlock.kind == .paragraph {
+
+                    blocks.removeLast()
+
+                    blocks.append(
+                        MeetingNoteBlock(
+                            kind: .speaker,
+                            text: previousBlock.text
+                        )
+                    )
+                }
+
+                blocks.append(
+                    MeetingNoteBlock(
+                        kind: .timestamp,
+                        text: timestamp
+                    )
+                )
+
+                continue
+            }
+
             if line.hasPrefix("### ") {
                 flushParagraph()
 
@@ -174,6 +242,37 @@ struct MeetingNoteReaderView: View {
 
         return blocks
     }
+
+    private func jamieTimestamp(
+        from line: String
+    ) -> String? {
+
+        guard line.hasPrefix("###### ") else {
+            return nil
+        }
+
+        let value = String(
+            line.dropFirst(7)
+        )
+        .trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        let pattern =
+            #"^\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}$"#
+
+        guard value.range(
+            of: pattern,
+            options: .regularExpression
+        ) != nil else {
+            return nil
+        }
+
+        return value.replacingOccurrences(
+            of: " - ",
+            with: " – "
+        )
+    }
 }
 
 private struct MeetingNoteBlock: Identifiable {
@@ -183,9 +282,11 @@ private struct MeetingNoteBlock: Identifiable {
     let text: String
 }
 
-private enum MeetingNoteBlockKind {
+private enum MeetingNoteBlockKind: Equatable {
     case heading
     case subheading
+    case speaker
+    case timestamp
     case bullet
     case paragraph
 }
