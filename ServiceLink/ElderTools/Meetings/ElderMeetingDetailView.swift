@@ -23,6 +23,11 @@ struct ElderMeetingDetailView: View {
     @State private var guestToRemove: ElderMeetingGuestDto?
     @State private var showingRemoveGuestDialog = false
 
+    @StateObject private var noteVM = EditElderMeetingViewModel()
+
+    @State private var showingSummary = false
+    @State private var showingTranscript = false
+    
     var body: some View {
 
         ScrollView {
@@ -47,6 +52,44 @@ struct ElderMeetingDetailView: View {
                                 .font(.headline)
 
                             Text(notes)
+                        }
+                    }
+                    
+                    if noteVM.summaryNote != nil ||
+                        noteVM.transcriptNote != nil {
+
+                        VStack(alignment: .leading, spacing: 12) {
+
+                            Text("Meeting Documents")
+                                .font(.headline)
+
+                            if let summary = noteVM.summaryNote {
+
+                                Button {
+                                    showingSummary = true
+                                } label: {
+                                    meetingDocumentRow(
+                                        title: summary.noteTitle ?? "Meeting Summary",
+                                        subtitle: "Read Summary",
+                                        systemImage: "doc.text.fill"
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+
+                            if let transcript = noteVM.transcriptNote {
+
+                                Button {
+                                    showingTranscript = true
+                                } label: {
+                                    meetingDocumentRow(
+                                        title: transcript.noteTitle ?? "Meeting Transcript",
+                                        subtitle: "Read Transcript",
+                                        systemImage: "text.bubble.fill"
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
 
@@ -163,12 +206,68 @@ struct ElderMeetingDetailView: View {
         
         .sheet(isPresented: $isShowingEditMeeting, onDismiss: {
             Task {
-                await vm.loadMeeting(elderMeetingId: elderMeetingId)
+                await vm.loadMeeting(
+                    elderMeetingId: elderMeetingId
+                )
+
+                await noteVM.loadSummary(
+                    meetingId: elderMeetingId
+                )
+
+                await noteVM.loadTranscript(
+                    meetingId: elderMeetingId
+                )
             }
         }) {
             if let meeting = vm.meeting {
                 EditElderMeetingView(meeting: meeting)
                     .environmentObject(appState)
+            }
+        }
+        .sheet(isPresented: $showingSummary) {
+            if let note = noteVM.summaryNote {
+
+                NavigationStack {
+
+                    MeetingNoteReaderView(
+                        text: note.noteMarkdown
+                    )
+                    .navigationTitle(
+                        note.noteTitle ?? "Meeting Summary"
+                    )
+                    .toolbar {
+                        ToolbarItem(
+                            placement: .confirmationAction
+                        ) {
+                            Button("Done") {
+                                showingSummary = false
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingTranscript) {
+            if let note = noteVM.transcriptNote {
+
+                NavigationStack {
+
+                    MeetingNoteReaderView(
+                        text: note.noteMarkdown
+                    )
+                    .navigationTitle(
+                        note.noteTitle ?? "Meeting Transcript"
+                    )
+                    .toolbar {
+                        ToolbarItem(
+                            placement: .confirmationAction
+                        ) {
+                            Button("Done") {
+                                showingTranscript = false
+                            }
+                        }
+                    }
+                }
             }
         }
         .sheet(item: $guestToEdit, onDismiss: {
@@ -185,10 +284,22 @@ struct ElderMeetingDetailView: View {
          
         .onAppear {
             if let session = appState.session {
+
                 vm.configure(session: session)
+                noteVM.configure(session: session)
 
                 Task {
-                    await vm.loadMeeting(elderMeetingId: elderMeetingId)
+                    await vm.loadMeeting(
+                        elderMeetingId: elderMeetingId
+                    )
+
+                    await noteVM.loadSummary(
+                        meetingId: elderMeetingId
+                    )
+
+                    await noteVM.loadTranscript(
+                        meetingId: elderMeetingId
+                    )
                 }
             }
         }
@@ -293,5 +404,43 @@ struct ElderMeetingDetailView: View {
         output.dateFormat = "EEEE, MMMM d, yyyy - h:mm a"
 
         return output.string(from: date)
+    }
+    private func meetingDocumentRow(
+        title: String,
+        subtitle: String,
+        systemImage: String
+    ) -> some View {
+
+        HStack(spacing: 12) {
+
+            Image(systemName: systemImage)
+                .font(.title2)
+                .foregroundStyle(.tint)
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: 3) {
+
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.tertiary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.thinMaterial)
+        .clipShape(
+            RoundedRectangle(cornerRadius: 12)
+        )
     }
 }

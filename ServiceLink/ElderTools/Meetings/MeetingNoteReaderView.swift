@@ -75,6 +75,9 @@ struct MeetingNoteReaderView: View {
                         alignment: .leading
                     )
             }
+        case .divider:
+            Divider()
+                .padding(.vertical, 4)
 
         case .paragraph:
             Text(.init(block.text))
@@ -132,6 +135,18 @@ struct MeetingNoteReaderView: View {
 
             if line.isEmpty {
                 flushParagraph()
+                continue
+            }
+            if line == "---" {
+                flushParagraph()
+
+                blocks.append(
+                    MeetingNoteBlock(
+                        kind: .divider,
+                        text: ""
+                    )
+                )
+
                 continue
             }
 
@@ -219,6 +234,20 @@ struct MeetingNoteReaderView: View {
 
                 continue
             }
+            if line.hasPrefix("# ") {
+                flushParagraph()
+
+                blocks.append(
+                    MeetingNoteBlock(
+                        kind: .heading,
+                        text: String(
+                            line.dropFirst(2)
+                        )
+                    )
+                )
+
+                continue
+            }
 
             if line.hasPrefix("- ") {
                 flushParagraph()
@@ -288,5 +317,6 @@ private enum MeetingNoteBlockKind: Equatable {
     case speaker
     case timestamp
     case bullet
+    case divider
     case paragraph
 }

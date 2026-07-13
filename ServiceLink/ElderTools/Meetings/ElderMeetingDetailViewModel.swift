@@ -15,6 +15,7 @@ final class ElderMeetingDetailViewModel: ObservableObject {
     @Published var meeting: ElderMeetingDetailDto?
     @Published var isLoading = false
     @Published var errorMessage: String?
+    
 
     func configure(session: ServiceLinkSession) {
         self.session = session
@@ -121,4 +122,5 @@ final class ElderMeetingDetailViewModel: ObservableObject {
             return false
         }
     }
+    
 }
