@@ -204,27 +204,30 @@ struct ElderMeetingDetailView: View {
             }
         }
         
-        .sheet(isPresented: $isShowingEditMeeting, onDismiss: {
-            Task {
-                await vm.loadMeeting(
-                    elderMeetingId: elderMeetingId
-                )
+        .fullScreenCover(
+            isPresented: $isShowingEditMeeting,
+            onDismiss: {
+                Task {
+                    await vm.loadMeeting(
+                        elderMeetingId: elderMeetingId
+                    )
 
-                await noteVM.loadSummary(
-                    meetingId: elderMeetingId
-                )
+                    await noteVM.loadSummary(
+                        meetingId: elderMeetingId
+                    )
 
-                await noteVM.loadTranscript(
-                    meetingId: elderMeetingId
-                )
+                    await noteVM.loadTranscript(
+                        meetingId: elderMeetingId
+                    )
+                }
             }
-        }) {
+        ) {
             if let meeting = vm.meeting {
                 EditElderMeetingView(meeting: meeting)
                     .environmentObject(appState)
             }
         }
-        .sheet(isPresented: $showingSummary) {
+        .fullScreenCover(isPresented: $showingSummary) {
             if let note = noteVM.summaryNote {
 
                 NavigationStack {
@@ -247,7 +250,7 @@ struct ElderMeetingDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingTranscript) {
+        .fullScreenCover(isPresented: $showingTranscript) {
             if let note = noteVM.transcriptNote {
 
                 NavigationStack {

@@ -223,27 +223,34 @@ struct EditElderMeetingView: View {
                 }
             }
             
-            .sheet(isPresented: $showingTranscriptEditor) {
+            .fullScreenCover(isPresented: $showingTranscriptEditor) {
                 NavigationStack {
                     Form {
                         Section("Title") {
-                            TextField("Transcript title", text: $transcriptTitle)
+                            TextField(
+                                "Transcript title",
+                                text: $transcriptTitle
+                            )
                         }
 
                         Section("Transcript") {
                             TextEditor(text: $transcriptText)
-                                .frame(minHeight: 350)
+                                .frame(minHeight: 500)
                         }
                     }
                     .navigationTitle("Add Transcript")
                     .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
+                        ToolbarItem(
+                            placement: .cancellationAction
+                        ) {
                             Button("Cancel") {
                                 showingTranscriptEditor = false
                             }
                         }
 
-                        ToolbarItem(placement: .confirmationAction) {
+                        ToolbarItem(
+                            placement: .confirmationAction
+                        ) {
                             Button("Save") {
                                 Task {
                                     let ok = await vm.saveTranscript(
@@ -254,6 +261,7 @@ struct EditElderMeetingView: View {
 
                                     if ok {
                                         showingTranscriptEditor = false
+
                                         await vm.loadTranscript(
                                             meetingId: meeting.elderMeetingId
                                         )
@@ -261,16 +269,18 @@ struct EditElderMeetingView: View {
                                 }
                             }
                             .disabled(
-                                transcriptText.trimmingCharacters(
-                                    in: .whitespacesAndNewlines
-                                ).isEmpty
+                                transcriptText
+                                    .trimmingCharacters(
+                                        in: .whitespacesAndNewlines
+                                    )
+                                    .isEmpty
                             )
                         }
                     }
                 }
             }
-            
-            .sheet(isPresented: $showingTranscript) {
+
+            .fullScreenCover(isPresented: $showingTranscript) {
                 if let note = vm.transcriptNote {
                     NavigationStack {
                         MeetingNoteReaderView(
@@ -291,7 +301,8 @@ struct EditElderMeetingView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingSummaryEditor) {
+
+            .fullScreenCover(isPresented: $showingSummaryEditor) {
                 NavigationStack {
                     Form {
                         Section("Title") {
@@ -303,7 +314,7 @@ struct EditElderMeetingView: View {
 
                         Section("Summary") {
                             TextEditor(text: $summaryText)
-                                .frame(minHeight: 350)
+                                .frame(minHeight: 500)
                         }
                     }
                     .navigationTitle(
@@ -333,8 +344,6 @@ struct EditElderMeetingView: View {
 
                                     if ok {
                                         showingSummaryEditor = false
-                                        //summaryTitle = ""
-                                        //summaryText = ""
 
                                         await vm.loadSummary(
                                             meetingId: meeting.elderMeetingId
@@ -353,7 +362,8 @@ struct EditElderMeetingView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingSummary) {
+
+            .fullScreenCover(isPresented: $showingSummary) {
                 if let note = vm.summaryNote {
                     NavigationStack {
                         MeetingNoteReaderView(
