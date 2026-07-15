@@ -80,6 +80,13 @@ struct EditElderMeetingView: View {
                             }
                             .buttonStyle(.borderless)
 
+                            Button("Edit Summary") {
+                                summaryTitle = summaryNote.noteTitle ?? "Meeting Summary"
+                                summaryText = summaryNote.noteMarkdown
+                                showingSummaryEditor = true
+                            }
+                            .buttonStyle(.borderless)
+
                             Button("Delete Summary", role: .destructive) {
                                 showingDeleteSummary = true
                             }
@@ -299,7 +306,11 @@ struct EditElderMeetingView: View {
                                 .frame(minHeight: 350)
                         }
                     }
-                    .navigationTitle("Add Summary")
+                    .navigationTitle(
+                        vm.summaryNote == nil
+                            ? "Add Summary"
+                            : "Edit Summary"
+                    )
                     .toolbar {
                         ToolbarItem(
                             placement: .cancellationAction
@@ -322,8 +333,8 @@ struct EditElderMeetingView: View {
 
                                     if ok {
                                         showingSummaryEditor = false
-                                        summaryTitle = ""
-                                        summaryText = ""
+                                        //summaryTitle = ""
+                                        //summaryText = ""
 
                                         await vm.loadSummary(
                                             meetingId: meeting.elderMeetingId
