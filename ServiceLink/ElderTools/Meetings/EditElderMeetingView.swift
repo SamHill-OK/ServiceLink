@@ -34,6 +34,12 @@ struct EditElderMeetingView: View {
     @State private var showingSummaryEditor = false
     @State private var summaryTitle = ""
     @State private var summaryText = ""
+    
+    @State private var showingFind = false
+    @State private var findText = ""
+    @State private var findMatches: [NSRange] = []
+    @State private var currentFindMatch = 0
+    @State private var summarySelection: NSRange?
 
     var body: some View {
 
@@ -304,17 +310,27 @@ struct EditElderMeetingView: View {
 
             .fullScreenCover(isPresented: $showingSummaryEditor) {
                 NavigationStack {
-                    Form {
-                        Section("Title") {
-                            TextField(
-                                "Summary title",
-                                text: $summaryTitle
-                            )
+                    VStack(spacing: 0) {
+
+                        if showingFind {
+                            summaryFindBar
                         }
 
-                        Section("Summary") {
-                            TextEditor(text: $summaryText)
+                        Form {
+                            Section("Title") {
+                                TextField(
+                                    "Summary title",
+                                    text: $summaryTitle
+                                )
+                            }
+
+                            Section("Summary") {
+                                SearchableTextEditor(
+                                    text: $summaryText,
+                                    selection: $summarySelection
+                                )
                                 .frame(minHeight: 500)
+                            }
                         }
                     }
                     .navigationTitle(
@@ -327,7 +343,22 @@ struct EditElderMeetingView: View {
                             placement: .cancellationAction
                         ) {
                             Button("Cancel") {
+                                closeSummaryFind()
                                 showingSummaryEditor = false
+                            }
+                        }
+
+                        ToolbarItem(
+                            placement: .topBarTrailing
+                        ) {
+                            Button {
+                                showingFind.toggle()
+
+                                if !showingFind {
+                                    closeSummaryFind()
+                                }
+                            } label: {
+                                Image(systemName: "magnifyingglass")
                             }
                         }
 
@@ -343,6 +374,7 @@ struct EditElderMeetingView: View {
                                     )
 
                                     if ok {
+                                        closeSummaryFind()
                                         showingSummaryEditor = false
 
                                         await vm.loadSummary(
@@ -435,5 +467,319 @@ struct EditElderMeetingView: View {
         }
         
     }
- 
+    private var summaryFindBar: some View {
+
+        VStack(spacing: 8) {
+
+            HStack(spacing: 8) {
+
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+
+                TextField(
+                    "Find in Summary",
+                    text: $findText
+                )
+                .textFieldStyle(.roundedBorder)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .onChange(of: findText) {
+                    updateSummaryFindMatches()
+                }
+
+                Button("Done") {
+                    closeSummaryFind()
+                }
+            }
+
+            HStack {
+
+                Button {
+                    showPreviousSummaryMatch()
+                } label: {
+                    Image(systemName: "chevron.up")
+                }
+                .disabled(findMatches.isEmpty)
+
+                Button {
+                    showNextSummaryMatch()
+                } label: {
+                    Image(systemName: "chevron.down")
+                }
+                .disabled(findMatches.isEmpty)
+
+                Spacer()
+
+                if findText.isEmpty {
+                    Text("Enter text to find")
+                        .foregroundStyle(.secondary)
+                } else if findMatches.isEmpty {
+                    Text("No matches")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(
+                        "\(currentFindMatch + 1) of \(findMatches.count)"
+                    )
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .font(.subheadline)
+        }
+        .padding()
+        .background(Color(uiColor: .secondarySystemBackground))
+    }
+    private func updateSummaryFindMatches() {
+
+        findMatches.removeAll()
+        currentFindMatch = 0
+        summarySelection = nil
+
+        guard !findText.isEmpty else {
+            return
+        }
+
+        let source = summaryText as NSString
+        var searchRange = NSRange(
+            location: 0,
+            length: source.length
+        )
+
+        while searchRange.location < source.length {
+
+            let match = source.range(
+                of: findText,
+                options: [.caseInsensitive],
+                range: searchRange
+            )
+
+            guard match.location != NSNotFound else {
+                break
+            }
+
+            findMatches.append(match)
+
+            let nextLocation =
+                match.location + max(match.length, 1)
+
+            searchRange = NSRange(
+                location: nextLocation,
+                length: source.length - nextLocation
+            )
+        }
+
+        if !findMatches.isEmpty {
+            summarySelection = findMatches[0]
+        }
+    }
+
+    private func showNextSummaryMatch() {
+
+        guard !findMatches.isEmpty else {
+            return
+        }
+
+        currentFindMatch =
+            (currentFindMatch + 1) % findMatches.count
+
+        summarySelection =
+            findMatches[currentFindMatch]
+    }
+
+    private func showPreviousSummaryMatch() {
+
+        guard !findMatches.isEmpty else {
+            return
+        }
+
+        currentFindMatch =
+            currentFindMatch == 0
+                ? findMatches.count - 1
+                : currentFindMatch - 1
+
+        summarySelection =
+            findMatches[currentFindMatch]
+    }
+
+    private func closeSummaryFind() {
+
+        showingFind = false
+        findText = ""
+        findMatches.removeAll()
+        currentFindMatch = 0
+        summarySelection = nil
+    }
+}
+
+
+
+private struct SearchableTextEditor: UIViewRepresentable {
+
+    @Binding var text: String
+    @Binding var selection: NSRange?
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    func makeUIView(
+        context: Context
+    ) -> UITextView {
+
+        let textView = UITextView()
+
+        textView.delegate = context.coordinator
+        textView.font =
+            UIFont.preferredFont(forTextStyle: .body)
+
+        textView.adjustsFontForContentSizeCategory = true
+        textView.backgroundColor = .clear
+        textView.isScrollEnabled = true
+        textView.alwaysBounceVertical = true
+        textView.keyboardDismissMode = .interactive
+
+        textView.textContainerInset = UIEdgeInsets(
+            top: 8,
+            left: 4,
+            bottom: 8,
+            right: 4
+        )
+
+        textView.textContainer.lineFragmentPadding = 0
+
+        return textView
+    }
+
+    func updateUIView(
+        _ textView: UITextView,
+        context: Context
+    ) {
+
+        let font =
+            UIFont.preferredFont(forTextStyle: .body)
+
+        let attributedText =
+            NSMutableAttributedString(
+                string: text,
+                attributes: [
+                    .font: font,
+                    .foregroundColor:
+                        UIColor.label
+                ]
+            )
+
+        if let selection,
+           selection.location != NSNotFound,
+           selection.location + selection.length
+                <= attributedText.length {
+
+            attributedText.addAttribute(
+                .backgroundColor,
+                value: UIColor.systemYellow
+                    .withAlphaComponent(0.55),
+                range: selection
+            )
+        }
+
+        if textView.attributedText != attributedText {
+
+            let existingSelectedRange =
+                textView.selectedRange
+
+            textView.attributedText =
+                attributedText
+
+            if existingSelectedRange.location
+                <= attributedText.length {
+
+                textView.selectedRange =
+                    existingSelectedRange
+            }
+        }
+
+        guard let selection,
+              selection.location != NSNotFound,
+              selection.location + selection.length
+                <= attributedText.length else {
+
+            context.coordinator.lastScrolledRange = nil
+            return
+        }
+
+        guard context.coordinator.lastScrolledRange
+                != selection else {
+            return
+        }
+
+        context.coordinator.lastScrolledRange =
+            selection
+
+        DispatchQueue.main.async {
+
+            textView.layoutIfNeeded()
+
+            let glyphRange =
+                textView.layoutManager.glyphRange(
+                    forCharacterRange: selection,
+                    actualCharacterRange: nil
+                )
+
+            var matchRect =
+                textView.layoutManager.boundingRect(
+                    forGlyphRange: glyphRange,
+                    in: textView.textContainer
+                )
+
+            matchRect.origin.x +=
+                textView.textContainerInset.left
+
+            matchRect.origin.y +=
+                textView.textContainerInset.top
+
+            let desiredY =
+                matchRect.midY
+                - (textView.bounds.height / 2)
+
+            let maximumY =
+                max(
+                    0,
+                    textView.contentSize.height
+                    - textView.bounds.height
+                    + textView.adjustedContentInset.bottom
+                )
+
+            let centeredY =
+                min(
+                    max(desiredY, 0),
+                    maximumY
+                )
+
+            textView.setContentOffset(
+                CGPoint(
+                    x: 0,
+                    y: centeredY
+                ),
+                animated: true
+            )
+        }
+    }
+
+    final class Coordinator:
+        NSObject,
+        UITextViewDelegate {
+
+        private var parent: SearchableTextEditor
+
+        var lastScrolledRange: NSRange?
+
+        init(parent: SearchableTextEditor) {
+            self.parent = parent
+        }
+
+        func textViewDidChange(
+            _ textView: UITextView
+        ) {
+            parent.text = textView.text
+            lastScrolledRange = nil
+        }
+    }
 }
