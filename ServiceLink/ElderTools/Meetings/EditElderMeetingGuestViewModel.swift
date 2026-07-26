@@ -64,7 +64,7 @@ final class EditElderMeetingGuestViewModel: ObservableObject {
                 withJSONObject: payload
             )
 
-            let (_, response) = try await URLSession.shared.data(
+            let (_, response) = try await ApiClient.shared.data(
                 for: request
             )
 

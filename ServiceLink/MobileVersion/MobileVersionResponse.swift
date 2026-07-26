@@ -34,7 +34,7 @@ final class MobileVersionService {
         }
 
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
+            let (data, response) = try await ApiClient.shared.data(from: url)
 
             guard let http = response as? HTTPURLResponse,
                   http.statusCode == 200 else {

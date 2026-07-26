@@ -24,6 +24,10 @@ final class ElderMeetingDetailViewModel: ObservableObject {
 
         guard let session else { return }
 
+        guard !isLoading else {
+            print("⚠️ loadMeeting skipped — already loading")
+            return
+        }
         guard let url = URL(
             string: "\(ApiConfig.baseUrl)/api/eldertools/meeting/\(elderMeetingId)"
         ) else {
@@ -39,7 +43,7 @@ final class ElderMeetingDetailViewModel: ObservableObject {
         request.setValue(String(session.memberId), forHTTPHeaderField: "X-UserID")
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await ApiClient.shared.data(for: request)
 
             guard let http = response as? HTTPURLResponse,
                   http.statusCode == 200 else {
@@ -81,7 +85,7 @@ final class ElderMeetingDetailViewModel: ObservableObject {
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await ApiClient.shared.data(for: request)
 
             return (response as? HTTPURLResponse)?.statusCode == 200
 
@@ -113,7 +117,7 @@ final class ElderMeetingDetailViewModel: ObservableObject {
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await ApiClient.shared.data(for: request)
 
             return (response as? HTTPURLResponse)?.statusCode == 200
 

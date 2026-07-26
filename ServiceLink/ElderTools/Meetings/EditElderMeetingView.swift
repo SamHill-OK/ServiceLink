@@ -199,21 +199,13 @@ struct EditElderMeetingView: View {
                     }
                 }
             }
-            .onAppear {
+            .task(id: meeting.elderMeetingId) {
 
-                if let session = appState.session {
-
-                    vm.configure(session: session)
-                    Task {
-                        await vm.loadTranscript(
-                            meetingId: meeting.elderMeetingId
-                        )
-
-                        await vm.loadSummary(
-                            meetingId: meeting.elderMeetingId
-                        )
-                    }
+                guard let session = appState.session else {
+                    return
                 }
+
+                vm.configure(session: session)
 
                 meetingTitle = meeting.meetingTitle
                 notes = meeting.notes ?? ""
@@ -227,6 +219,10 @@ struct EditElderMeetingView: View {
                 ) {
                     meetingDate = date
                 }
+
+                await vm.loadMeetingNotes(
+                    meetingId: meeting.elderMeetingId
+                )
             }
             
             .fullScreenCover(isPresented: $showingTranscriptEditor) {

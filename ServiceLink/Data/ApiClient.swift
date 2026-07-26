@@ -28,8 +28,8 @@ final class ApiClient {
 
     static let shared = ApiClient()
 
-    private init() { }
-    
+    private let session: URLSession
+
     private let decoder: JSONDecoder = {
         let d = JSONDecoder()
         return d
@@ -39,8 +39,32 @@ final class ApiClient {
         let e = JSONEncoder()
         return e
     }()
-    
 
+    private init() {
+
+        let configuration =
+            URLSessionConfiguration.default
+
+        if #available(iOS 18.4, *) {
+            configuration.usesClassicLoadingMode = false
+        }
+
+        session = URLSession(
+            configuration: configuration
+        )
+    }
+    
+    func data(
+        from url: URL
+    ) async throws -> (Data, URLResponse) {
+        try await session.data(from: url)
+    }
+
+    func data(
+        for request: URLRequest
+    ) async throws -> (Data, URLResponse) {
+        try await session.data(for: request)
+    }
     func login(
         email: String,
         password: String
@@ -70,7 +94,7 @@ final class ApiClient {
             try JSONEncoder().encode(requestBody)
 
         let (data, response) =
-            try await URLSession.shared.data(
+            try await session.data(
                 for: request
             )
 
@@ -114,7 +138,7 @@ final class ApiClient {
         }
 
         let (data, _) =
-            try await URLSession.shared.data(
+            try await session.data(
                 from: url
             )
 
@@ -139,7 +163,7 @@ final class ApiClient {
         }
 
         let (data, response) =
-            try await URLSession.shared.data(
+            try await session.data(
                 from: url
             )
 
@@ -187,7 +211,7 @@ final class ApiClient {
         request.httpBody = try JSONEncoder().encode(body)
 
         let (_, response) =
-            try await URLSession.shared.data(for: request)
+            try await session.data(for: request)
 
         guard let http = response as? HTTPURLResponse,
               http.statusCode == 200
@@ -231,7 +255,7 @@ final class ApiClient {
             )
 
         let (_, response) =
-            try await URLSession.shared.data(
+            try await session.data(
                 for: request
             )
 
@@ -254,7 +278,7 @@ final class ApiClient {
         }
 
         let (data, response) =
-            try await URLSession.shared.data(from: url)
+            try await session.data(from: url)
 
         guard let http = response as? HTTPURLResponse,
               (200...299).contains(http.statusCode)
@@ -282,7 +306,7 @@ final class ApiClient {
         }
 
         let (data, response) =
-            try await URLSession.shared.data(from: url)
+            try await session.data(from: url)
 
         guard let http = response as? HTTPURLResponse,
               (200...299).contains(http.statusCode)
@@ -327,7 +351,7 @@ final class ApiClient {
         request.httpBody = try JSONEncoder().encode(body)
 
         let (_, response) =
-            try await URLSession.shared.data(for: request)
+            try await session.data(for: request)
 
         guard let http = response as? HTTPURLResponse,
               (200...299).contains(http.statusCode)
@@ -367,7 +391,7 @@ final class ApiClient {
             )
 
         let (_, response) =
-            try await URLSession.shared.data(
+            try await session.data(
                 for: request
             )
 
@@ -415,7 +439,7 @@ final class ApiClient {
             )
 
         let (_, response) =
-            try await URLSession.shared.data(
+            try await session.data(
                 for: request
             )
 
@@ -460,7 +484,7 @@ final class ApiClient {
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
 
-        let (data, resp) = try await URLSession.shared.data(for: req)
+        let (data, resp) = try await session.data(for: req)
         try validate(resp: resp, data: data)
 
         
@@ -481,7 +505,7 @@ final class ApiClient {
         var req = URLRequest(url: url)
         req.httpMethod = "PUT"
 
-        let (data, resp) = try await URLSession.shared.data(for: req)
+        let (data, resp) = try await session.data(for: req)
         try validate(resp: resp, data: data)
     }
     
@@ -500,7 +524,7 @@ final class ApiClient {
 
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, resp) = try await URLSession.shared.data(for: req)
+        let (data, resp) = try await session.data(for: req)
         try validate(resp: resp, data: data)
     }
     func getMeetingNote(
@@ -516,7 +540,7 @@ final class ApiClient {
         req.setValue(String(clientId), forHTTPHeaderField: "X-ClientID")
         req.setValue(String(userId), forHTTPHeaderField: "X-UserID")
 
-        let (data, resp) = try await URLSession.shared.data(for: req)
+        let (data, resp) = try await session.data(for: req)
 
         if let http = resp as? HTTPURLResponse {
 
@@ -562,7 +586,7 @@ final class ApiClient {
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try encoder.encode(body)
 
-        let (data, resp) = try await URLSession.shared.data(for: req)
+        let (data, resp) = try await session.data(for: req)
         try validate(resp: resp, data: data)
     }
     func deleteMeetingNote(
@@ -578,8 +602,37 @@ final class ApiClient {
         req.setValue(String(clientId), forHTTPHeaderField: "X-ClientID")
         req.setValue(String(userId), forHTTPHeaderField: "X-UserID")
 
-        let (data, resp) = try await URLSession.shared.data(for: req)
+        let (data, resp) = try await session.data(for: req)
         
         try validate(resp: resp, data: data)
     }
+    func getEotmList(
+        clientId: Int
+    ) async throws -> [EotmDto] {
+
+        guard let url = URL(
+            string:
+            "\(ApiConfig.baseUrl)/api/Eotm?clientId=\(clientId)"
+        ) else {
+            throw URLError(.badURL)
+        }
+
+        let (data, response) =
+            try await session.data(
+                from: url
+            )
+
+        guard let http =
+            response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode)
+        else {
+            throw URLError(.badServerResponse)
+        }
+
+        return try decoder.decode(
+            [EotmDto].self,
+            from: data
+        )
+    }
+    
 }

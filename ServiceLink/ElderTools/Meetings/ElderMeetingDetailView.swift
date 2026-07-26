@@ -208,17 +208,7 @@ struct ElderMeetingDetailView: View {
             isPresented: $isShowingEditMeeting,
             onDismiss: {
                 Task {
-                    await vm.loadMeeting(
-                        elderMeetingId: elderMeetingId
-                    )
-
-                    await noteVM.loadSummary(
-                        meetingId: elderMeetingId
-                    )
-
-                    await noteVM.loadTranscript(
-                        meetingId: elderMeetingId
-                    )
+                    await reloadMeetingData()
                 }
             }
         ) {
@@ -285,29 +275,33 @@ struct ElderMeetingDetailView: View {
             .environmentObject(appState)
         }
          
-        .onAppear {
-            if let session = appState.session {
+        .task(id: elderMeetingId) {
 
-                vm.configure(session: session)
-                noteVM.configure(session: session)
-
-                Task {
-                    await vm.loadMeeting(
-                        elderMeetingId: elderMeetingId
-                    )
-
-                    await noteVM.loadSummary(
-                        meetingId: elderMeetingId
-                    )
-
-                    await noteVM.loadTranscript(
-                        meetingId: elderMeetingId
-                    )
-                }
+            guard let session = appState.session else {
+                return
             }
+
+            vm.configure(session: session)
+            noteVM.configure(session: session)
+
+            await reloadMeetingData()
         }
     }
 
+    private func reloadMeetingData() async {
+
+        await vm.loadMeeting(
+            elderMeetingId: elderMeetingId
+        )
+
+        await noteVM.loadMeetingNotes(
+            meetingId: elderMeetingId
+        )
+
+        await noteVM.loadMeetingNotes(
+            meetingId: elderMeetingId
+        )
+    }
     private func guestCard(_ guest: ElderMeetingGuestDto) -> some View {
 
         VStack(alignment: .leading, spacing: 6) {

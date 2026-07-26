@@ -15,6 +15,7 @@ final class EditElderMeetingViewModel: ObservableObject {
     @Published var transcriptNote: ElderMeetingNoteDto?
     @Published var summaryNote: ElderMeetingNoteDto?
     @Published var noteError: String?
+    @Published private(set) var isLoadingNotes = false
 
     func configure(session: ServiceLinkSession) {
         self.session = session
@@ -72,7 +73,7 @@ final class EditElderMeetingViewModel: ObservableObject {
                 )
 
             let (_, response) =
-                try await URLSession.shared.data(
+                try await ApiClient.shared.data(
                     for: request
                 )
 
@@ -147,6 +148,21 @@ final class EditElderMeetingViewModel: ObservableObject {
             noteError = "Could not delete transcript."
             return false
         }
+    }
+    func loadMeetingNotes(meetingId: Int) async {
+
+        guard !isLoadingNotes else {
+            print("⚠️ Meeting notes load skipped — already loading")
+            return
+        }
+
+        isLoadingNotes = true
+        defer {
+            isLoadingNotes = false
+        }
+
+        await loadSummary(meetingId: meetingId)
+        await loadTranscript(meetingId: meetingId)
     }
     
     func loadSummary(meetingId: Int) async {

@@ -40,7 +40,7 @@ final class ReachOutViewModel: ObservableObject {
         request.setValue(String(session.memberId), forHTTPHeaderField: "X-UserID")
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await ApiClient.shared.data(for: request)
 
             guard let http = response as? HTTPURLResponse,
                   http.statusCode == 200 else {
@@ -84,7 +84,7 @@ final class ReachOutViewModel: ObservableObject {
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await ApiClient.shared.data(for: request)
 
             guard let http = response as? HTTPURLResponse,
                   http.statusCode == 200 else {
@@ -113,7 +113,7 @@ final class ReachOutViewModel: ObservableObject {
         request.setValue(String(session.clientId), forHTTPHeaderField: "X-ClientID")
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await ApiClient.shared.data(for: request)
             print("GoForward Response:")
             print(String(data: data, encoding: .utf8) ?? "NO DATA")
 
@@ -161,7 +161,7 @@ final class ReachOutViewModel: ObservableObject {
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await ApiClient.shared.data(for: request)
 
             if (response as? HTTPURLResponse)?.statusCode == 200 {
                 await loadRecentGoForwards()

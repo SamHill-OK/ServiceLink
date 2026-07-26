@@ -44,7 +44,7 @@ enum CrashTrail {
                 withJSONObject: payload.compactMapValues { $0 }
             )
 
-            _ = try await URLSession.shared.data(for: request)
+            _ = try await ApiClient.shared.data(for: request)
         } catch {
             print("🧨 CrashTrail SQL failed:", error)
         }

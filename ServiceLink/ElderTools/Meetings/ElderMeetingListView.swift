@@ -10,29 +10,32 @@ import SwiftUI
 struct ElderMeetingListView: View {
 
     @EnvironmentObject var appState: AppState
+    @Environment(\.scenePhase) private var scenePhase
+    
     @StateObject private var vm = ElderMeetingListViewModel()
     @State private var isShowingCreateMeeting = false
+    
 
     var body: some View {
-
+        
         ScrollView {
-
+            
             VStack(spacing: 12) {
-
+                
                 if vm.isLoading {
-
+                    
                     ProgressView()
-
+                    
                 } else if vm.meetings.isEmpty {
-
+                    
                     Text("No upcoming meetings")
                         .foregroundStyle(.secondary)
                         .padding(.top, 40)
-
+                    
                 } else {
-
+                    
                     ForEach(vm.meetings) { meeting in
-
+                        
                         NavigationLink {
                             ElderMeetingDetailView(
                                 elderMeetingId: meeting.elderMeetingId
@@ -58,15 +61,15 @@ struct ElderMeetingListView: View {
                                 .foregroundStyle(.secondary)
                             }
                             
-                        
-                        .buttonStyle(.plain)
-                        
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(.thinMaterial)
-                        .clipShape(
-                            RoundedRectangle(cornerRadius: 12)
-                        )
+                            
+                            .buttonStyle(.plain)
+                            
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(.thinMaterial)
+                            .clipShape(
+                                RoundedRectangle(cornerRadius: 12)
+                            )
                         }
                     }
                 }
@@ -75,7 +78,7 @@ struct ElderMeetingListView: View {
         }
         .navigationTitle("Meetings")
         .toolbar {
-
+            
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     isShowingCreateMeeting = true
@@ -83,7 +86,7 @@ struct ElderMeetingListView: View {
                     Image(systemName: "plus")
                 }
             }
-
+            
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task {
@@ -92,6 +95,7 @@ struct ElderMeetingListView: View {
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
+                .disabled(vm.isLoading)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink {
@@ -113,15 +117,31 @@ struct ElderMeetingListView: View {
             CreateElderMeetingView()
                 .environmentObject(appState)
         }
-        .onAppear {
-
-            if let session = appState.session {
-
-                vm.configure(session: session)
-
-                Task {
-                    await vm.loadMeetings()
-                }
+        .task {
+            guard scenePhase == .active else {
+                return
+            }
+            
+            guard let session = appState.session else {
+                return
+            }
+            
+            vm.configure(session: session)
+            await vm.loadMeetings()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active else {
+                return
+            }
+            
+            guard let session = appState.session else {
+                return
+            }
+            
+            vm.configure(session: session)
+            
+            Task {
+                await vm.loadMeetings()
             }
         }
     }

@@ -12,8 +12,9 @@ import SwiftUI
 struct ElderMeetingHistoryView: View {
 
     @EnvironmentObject var appState: AppState
+    @Environment(\.scenePhase) private var scenePhase
+
     @StateObject private var vm = ElderMeetingListViewModel()
-    @State private var isShowingCreateMeeting = false
 
     var body: some View {
 
@@ -27,7 +28,7 @@ struct ElderMeetingHistoryView: View {
 
                 } else if vm.meetings.isEmpty {
 
-                    Text("No upcoming meetings")
+                    Text("No past meetings")
                         .foregroundStyle(.secondary)
                         .padding(.top, 40)
 
@@ -40,36 +41,36 @@ struct ElderMeetingHistoryView: View {
                                 elderMeetingId: meeting.elderMeetingId
                             )
                         } label: {
-                            
+
                             VStack(alignment: .leading, spacing: 8) {
-                                
+
                                 Text(meeting.meetingTitle)
                                     .font(.headline)
-                                
+
                                 Text(formatMeetingDate(meeting.meetingDate))
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
-                                
+
                                 HStack {
-                                    
+
                                     Image(systemName: "person.2.fill")
-                                    
+
                                     Text("\(meeting.guestCount) Guests")
                                         .font(.caption)
                                 }
                                 .foregroundStyle(.secondary)
                             }
-                            
-                        
-                        .buttonStyle(.plain)
-                        
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(.thinMaterial)
-                        .clipShape(
-                            RoundedRectangle(cornerRadius: 12)
-                        )
+                            .frame(
+                                maxWidth: .infinity,
+                                alignment: .leading
+                            )
+                            .padding()
+                            .background(.thinMaterial)
+                            .clipShape(
+                                RoundedRectangle(cornerRadius: 12)
+                            )
                         }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -78,7 +79,8 @@ struct ElderMeetingHistoryView: View {
         .navigationTitle("Meeting History")
         .toolbar {
 
-           ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .topBarTrailing) {
+
                 Button {
                     Task {
                         await vm.loadMeetings(type: .past)
@@ -86,32 +88,41 @@ struct ElderMeetingHistoryView: View {
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
+                .disabled(vm.isLoading)
             }
-            
         }
-        .sheet(
-            isPresented: $isShowingCreateMeeting,
-            onDismiss: {
-                Task {
-                    await vm.loadMeetings()
-                }
+        .task {
+
+            guard scenePhase == .active else {
+                return
             }
-        ) {
-            CreateElderMeetingView()
-                .environmentObject(appState)
+
+            guard let session = appState.session else {
+                return
+            }
+
+            vm.configure(session: session)
+
+            await vm.loadMeetings(type: .past)
         }
-        .onAppear {
+        .onChange(of: scenePhase) { _, newPhase in
 
-            if let session = appState.session {
+            guard newPhase == .active else {
+                return
+            }
 
-                vm.configure(session: session)
+            guard let session = appState.session else {
+                return
+            }
 
-                Task {
-                    await vm.loadMeetings(type: .past)
-                }
+            vm.configure(session: session)
+
+            Task {
+                await vm.loadMeetings(type: .past)
             }
         }
     }
+
     private func formatMeetingDate(_ value: String) -> String {
 
         let input = DateFormatter()

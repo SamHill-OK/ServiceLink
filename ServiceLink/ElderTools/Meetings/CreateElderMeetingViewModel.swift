@@ -51,7 +51,7 @@ final class CreateElderMeetingViewModel: ObservableObject {
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await ApiClient.shared.data(for: request)
 
             return (response as? HTTPURLResponse)?.statusCode == 200
 

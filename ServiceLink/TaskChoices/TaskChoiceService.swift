@@ -16,7 +16,7 @@ final class TaskChoiceService {
     func getMembers(clientId: Int, memberId: Int) async throws -> [ServiceLinkTaskChoiceMember] {
         let url = URL(string: "\(baseUrl)/api/servicelink/task-choices/members?clientId=\(clientId)&memberId=\(memberId)")!
 
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await ApiClient.shared.data(from: url)
         try validate(response)
 
         return try JSONDecoder().decode([ServiceLinkTaskChoiceMember].self, from: data)
@@ -25,7 +25,7 @@ final class TaskChoiceService {
     func getTaskChoices(clientId: Int, memberId: Int) async throws -> [ServiceLinkTaskChoice] {
         let url = URL(string: "\(baseUrl)/api/servicelink/task-choices?clientId=\(clientId)&memberId=\(memberId)")!
 
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await ApiClient.shared.data(from: url)
         try validate(response)
 
         return try JSONDecoder().decode([ServiceLinkTaskChoice].self, from: data)
@@ -39,7 +39,7 @@ final class TaskChoiceService {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = try JSONEncoder().encode(request)
 
-        let (_, response) = try await URLSession.shared.data(for: urlRequest)
+        let (_, response) = try await ApiClient.shared.data(for: urlRequest)
         try validate(response)
     }
 

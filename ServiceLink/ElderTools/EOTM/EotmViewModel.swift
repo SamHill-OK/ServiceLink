@@ -28,34 +28,45 @@ final class EotmViewModel: ObservableObject {
     func loadEotmList() async {
         guard let session else { return }
 
-        guard let url = URL(string: "\(ApiConfig.baseUrl)/api/Eotm?clientId=\(session.clientId)") else {
-            return
-        }
-
         isLoading = true
         defer { isLoading = false }
 
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
-
-            guard (response as? HTTPURLResponse)?.statusCode == 200 else { return }
-
-            let items = try JSONDecoder().decode([EotmDto].self, from: data)
+            let items =
+                try await ApiClient.shared.getEotmList(
+                    clientId: session.clientId
+                )
 
             let now = Date()
-            let components = Calendar.current.dateComponents([.year, .month], from: now)
+
+            let components =
+                Calendar.current.dateComponents(
+                    [.year, .month],
+                    from: now
+                )
 
             eotmList = items.filter { item in
                 guard let year = components.year,
                       let month = components.month,
-                      let itemMonth = item.calMonth else { return false }
+                      let itemMonth = item.calMonth
+                else {
+                    return false
+                }
 
                 return item.calYear > year ||
-                    (item.calYear == year && itemMonth >= month)
+                    (
+                        item.calYear == year &&
+                        itemMonth >= month
+                    )
             }
 
         } catch {
-            print("❌ loadEotmList error:", error)
+            print(
+                "❌ loadEotmList error:",
+                error.localizedDescription
+            )
+
+            eotmList = []
         }
     }
 

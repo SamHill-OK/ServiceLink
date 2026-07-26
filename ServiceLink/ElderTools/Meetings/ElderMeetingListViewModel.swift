@@ -30,6 +30,12 @@ final class ElderMeetingListViewModel: ObservableObject {
 
         guard let session else { return }
 
+        // Do not allow overlapping URLSession requests.
+        guard !isLoading else {
+            print("⚠️ loadMeetings skipped — already loading")
+            return
+        }
+
         let endpoint: String
 
         switch type {
@@ -42,32 +48,49 @@ final class ElderMeetingListViewModel: ObservableObject {
         guard let url = URL(
             string: "\(ApiConfig.baseUrl)/api/eldertools/meeting/\(endpoint)"
         ) else {
+            errorMessage = "Invalid meeting URL."
             return
         }
 
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
+
+        defer {
+            isLoading = false
+        }
 
         var request = URLRequest(url: url)
-        request.setValue(String(session.clientId), forHTTPHeaderField: "X-ClientID")
-        request.setValue(String(session.memberId), forHTTPHeaderField: "X-UserID")
+        request.setValue(
+            String(session.clientId),
+            forHTTPHeaderField: "X-ClientID"
+        )
+        request.setValue(
+            String(session.memberId),
+            forHTTPHeaderField: "X-UserID"
+        )
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            print("Meeting Response:")
-            print(String(data: data, encoding: .utf8) ?? "NO DATA")
+            let (data, response) =
+                try await ApiClient.shared.data(for: request)
 
             guard let http = response as? HTTPURLResponse,
                   http.statusCode == 200 else {
+
                 errorMessage = "Unable to load meetings."
                 return
             }
 
-            meetings = try JSONDecoder().decode([ElderMeetingDto].self, from: data)
+            meetings = try JSONDecoder().decode(
+                [ElderMeetingDto].self,
+                from: data
+            )
+
+        } catch is CancellationError {
+
+            print("Meeting request cancelled.")
 
         } catch {
+
             print("❌ loadMeetings error:", error)
             errorMessage = "Unable to load meetings."
         }
