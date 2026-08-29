@@ -804,4 +804,150 @@ final class ApiClient {
             throw ApiError.decoding(error)
         }
     }
+    func getActivities(
+        clientId: Int,
+        year: Int,
+        month: Int
+    ) async throws -> [DirectoryActivity] {
+
+        let queryItems = [
+
+            URLQueryItem(
+                name: "clientId",
+                value: String(clientId)
+            ),
+
+            URLQueryItem(
+                name: "year",
+                value: String(year)
+            ),
+
+            URLQueryItem(
+                name: "month",
+                value: String(month)
+            )
+        ]
+
+        let url = try buildUrl(
+            "/api/activities",
+            query: queryItems
+        )
+
+        var request = URLRequest(url: url)
+
+        request.httpMethod = "GET"
+
+        let (data, response) =
+            try await session.data(for: request)
+
+        try validate(
+            resp: response,
+            data: data
+        )
+
+        do {
+
+            return try decoder.decode(
+                [DirectoryActivity].self,
+                from: data
+            )
+
+        } catch {
+
+            throw ApiError.decoding(error)
+        }
+    }
+    func getBirthdays(
+        clientId: Int,
+        year: Int,
+        month: Int
+    ) async throws -> [DirectoryBirthday] {
+
+        let queryItems = [
+            URLQueryItem(
+                name: "clientId",
+                value: String(clientId)
+            ),
+            URLQueryItem(
+                name: "year",
+                value: String(year)
+            ),
+            URLQueryItem(
+                name: "month",
+                value: String(month)
+            )
+        ]
+
+        let url = try buildUrl(
+            "/api/directory/birthdays",
+            query: queryItems
+        )
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        let (data, response) =
+            try await session.data(for: request)
+
+        try validate(
+            resp: response,
+            data: data
+        )
+
+        do {
+            return try decoder.decode(
+                [DirectoryBirthday].self,
+                from: data
+            )
+        } catch {
+            throw ApiError.decoding(error)
+        }
+    }
+    func getAnniversaries(
+        clientId: Int,
+        year: Int,
+        month: Int
+    ) async throws -> [DirectoryAnniversary] {
+
+        let queryItems = [
+            URLQueryItem(
+                name: "clientId",
+                value: String(clientId)
+            ),
+            URLQueryItem(
+                name: "year",
+                value: String(year)
+            ),
+            URLQueryItem(
+                name: "month",
+                value: String(month)
+            )
+        ]
+
+        let url = try buildUrl(
+            "/api/directory/anniversaries",
+            query: queryItems
+        )
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        let (data, response) =
+            try await session.data(for: request)
+
+        try validate(
+            resp: response,
+            data: data
+        )
+
+        do {
+            return try decoder.decode(
+                [DirectoryAnniversary].self,
+                from: data
+            )
+        } catch {
+            throw ApiError.decoding(error)
+        }
+    }
+    
 }

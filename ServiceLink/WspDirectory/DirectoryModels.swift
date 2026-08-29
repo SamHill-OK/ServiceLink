@@ -132,6 +132,10 @@ struct DirectoryStaffMember: Identifiable, Codable {
     let memberName: String
     let staffTitle: String
 
+    let phoneNumber: String?
+    let smsNumber: String?
+    let email: String?
+    
     let systemRoleCode: String?
 
     let staffPhotoUrl: String?
