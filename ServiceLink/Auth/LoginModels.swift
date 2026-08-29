@@ -27,5 +27,27 @@ struct LoginResponse: Codable {
     
     let elderFlag: Bool
     let useElderTools: Bool
+    let globalUserID: Int?
+    let congregations: [LoginCongregation]?
 
+}
+
+
+struct LoginCongregation: Codable, Identifiable {
+
+    let memberID: Int
+    let memberName: String
+
+    let clientID: Int
+    let clientName: String
+
+    let roleID: Int
+
+    let allowPublicTaskRequests: Bool?
+    let elderFlag: Bool
+    let useElderTools: Bool
+
+    var id: Int {
+        clientID
+    }
 }

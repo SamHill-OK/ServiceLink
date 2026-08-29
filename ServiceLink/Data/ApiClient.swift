@@ -82,7 +82,6 @@ final class ApiClient {
         )
 
         var request = URLRequest(url: url)
-
         request.httpMethod = "POST"
 
         request.setValue(
@@ -103,7 +102,14 @@ final class ApiClient {
         else {
             throw URLError(.badServerResponse)
         }
+            
+            let responseText =
+                    String(data: data, encoding: .utf8)
+                    ?? "NO DATA"
 
+                print("Login status: \(http.statusCode)")
+                print("Login response: \(responseText)")
+            
         if http.statusCode != 200 {
             throw NSError(
                 domain: "",
@@ -118,7 +124,7 @@ final class ApiClient {
         let decoder = JSONDecoder()
         
         
-        print(String(data: data, encoding: .utf8) ?? "NO DATA")
+        //print(String(data: data, encoding: .utf8) ?? "NO DATA")
 
         return try decoder.decode(LoginResponse.self, from: data)
     }
@@ -634,5 +640,168 @@ final class ApiClient {
             from: data
         )
     }
-    
+    func getDirectoryStaff(
+        clientId: Int,
+        activeOnly: Bool = true
+    ) async throws -> [DirectoryStaffMember] {
+
+        let url = try buildUrl(
+            "/api/DirectoryStaff",
+            query: [
+                URLQueryItem(
+                    name: "clientId",
+                    value: String(clientId)
+                ),
+                URLQueryItem(
+                    name: "activeOnly",
+                    value: String(activeOnly)
+                )
+            ]
+        )
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        let (data, response) =
+            try await session.data(for: request)
+
+        try validate(
+            resp: response,
+            data: data
+        )
+
+        do {
+            return try decoder.decode(
+                [DirectoryStaffMember].self,
+                from: data
+            )
+        } catch {
+            throw ApiError.decoding(error)
+        }
+    }
+    func getDirectoryFamily(
+        clientId: Int,
+        wspFamilyId: Int
+    ) async throws -> DirectoryFamilyDetail {
+
+        let url = try buildUrl(
+            "/api/Family/\(wspFamilyId)",
+            query: [
+                URLQueryItem(
+                    name: "clientId",
+                    value: String(clientId)
+                )
+            ]
+        )
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        let (data, response) =
+            try await session.data(for: request)
+
+        try validate(
+            resp: response,
+            data: data
+        )
+
+        let decoder = JSONDecoder()
+
+        decoder.dateDecodingStrategy = .custom { decoder in
+
+            let container =
+                try decoder.singleValueContainer()
+
+            let value =
+                try container.decode(String.self)
+
+            let formats = [
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS",
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd"
+            ]
+
+            for format in formats {
+
+                let formatter = DateFormatter()
+                formatter.locale =
+                    Locale(identifier: "en_US_POSIX")
+                formatter.dateFormat = format
+
+                if let date = formatter.date(from: value) {
+                    return date
+                }
+            }
+
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription:
+                    "Unable to decode date: \(value)"
+            )
+        }
+
+        do {
+            return try decoder.decode(
+                DirectoryFamilyDetail.self,
+                from: data
+            )
+        } catch {
+            throw ApiError.decoding(error)
+        }
+    }
+    func searchDirectoryFamilies(
+        clientId: Int,
+        searchText: String? = nil,
+        activeOnly: Bool = true
+    ) async throws -> [DirectoryFamily] {
+
+        var queryItems = [
+            URLQueryItem(
+                name: "clientId",
+                value: String(clientId)
+            ),
+            URLQueryItem(
+                name: "activeOnly",
+                value: String(activeOnly)
+            )
+        ]
+
+        if let searchText,
+           !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+
+            queryItems.append(
+                URLQueryItem(
+                    name: "searchText",
+                    value: searchText
+                )
+            )
+        }
+
+        let url = try buildUrl(
+            "/api/Family/search",
+            query: queryItems
+        )
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        let (data, response) =
+            try await session.data(for: request)
+
+        try validate(
+            resp: response,
+            data: data
+        )
+
+        do {
+            return try decoder.decode(
+                [DirectoryFamily].self,
+                from: data
+            )
+        } catch {
+            throw ApiError.decoding(error)
+        }
+    }
 }

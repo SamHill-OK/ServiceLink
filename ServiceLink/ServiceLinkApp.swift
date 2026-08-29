@@ -11,27 +11,38 @@ import SwiftUI
 struct ServiceLinkApp: App {
 
     @StateObject private var appState = AppState()
+
     init() {
-        
         CrashTrail.log("App launched")
-                print("🧨 Last CrashTrail: \(CrashTrail.lastMessage)")
+        print(
+            "🧨 Last CrashTrail:",
+            CrashTrail.lastMessage
+        )
     }
+
     var body: some Scene {
 
         WindowGroup {
 
-            if appState.session == nil {
-
-                LoginView()
-                    .environmentObject(appState)
-
-            } else {
+            if appState.session != nil {
 
                 UpcomingAssignmentsView()
                     .environmentObject(appState)
                     .onAppear {
-                        CrashTrail.log("UpcomingAssignments appeared")
+                        CrashTrail.log(
+                            "UpcomingAssignments appeared"
+                        )
                     }
+
+            } else if appState.needsCongregationSelection {
+
+                CongregationSelectionView()
+                    .environmentObject(appState)
+
+            } else {
+
+                LoginView()
+                    .environmentObject(appState)
 
             }
         }

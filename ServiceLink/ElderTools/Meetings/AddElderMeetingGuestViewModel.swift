@@ -104,17 +104,29 @@ final class AddElderMeetingGuestViewModel: ObservableObject {
             "guestTime": timeFormatter.string(from: guestTime),
             "guestNotes": guestNotes
         ]
+        print("🧪 elderMeetingId:", elderMeetingId)
+        print("🧪 memberId:", selectedMember.memberID)
+        print("🧪 guestTime:", timeFormatter.string(from: guestTime))
+        print("🧪 guestNotes:", guestNotes)
+        print("🧪 clientId:", session.clientId)
+        print("🧪 userId:", session.memberId)
 
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+            let body = try JSONSerialization.data(withJSONObject: payload)
 
-            let (_, response) = try await ApiClient.shared.data(for: request)
+            print(String(data: body, encoding: .utf8)!)
+
+            request.httpBody = body
+
+            let (data, response) = try await ApiClient.shared.data(for: request)
 
             guard let http = response as? HTTPURLResponse else {
                 return false
             }
-
-            if http.statusCode == 200 {
+            print("🧪 Add guest status:", http.statusCode)
+            print("🧪 Add guest response:", String(data: data, encoding: .utf8) ?? "<empty>")
+            
+            if (200...299).contains(http.statusCode) {
                 return true
             }
 

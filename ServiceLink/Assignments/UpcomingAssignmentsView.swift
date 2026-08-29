@@ -168,10 +168,26 @@ struct UpcomingAssignmentsView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
 
-                        Text("Hello \(appState.session?.memberName ?? "")!")
-                            .font(.caption)
-                            .foregroundStyle(.blue)
+                        Text(
+                            "Hello \(appState.session?.memberName ?? "")!"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.blue)
                     }
+                }
+
+                ToolbarItem(
+                    placement: .topBarTrailing
+                ) {
+                    Button {
+                        appState.logout()
+                    } label: {
+                        Image(
+                            systemName:
+                                "rectangle.portrait.and.arrow.right"
+                        )
+                    }
+                    .accessibilityLabel("Logout")
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -187,10 +203,11 @@ struct UpcomingAssignmentsView: View {
                                 .font(.caption2)
                         }
                     }
+
                     Spacer()
 
                     if appState.session?.elderFlag == true &&
-                       appState.session?.useElderTools == true {
+                        appState.session?.useElderTools == true {
 
                         NavigationLink {
                             ElderToolsHomeView()
@@ -202,18 +219,15 @@ struct UpcomingAssignmentsView: View {
                             }
                         }
 
-                       
+                        Spacer()
                     }
-                    Spacer()
 
-                    
-
-                    Button {
-                        appState.logout()
+                    NavigationLink {
+                        DirectoryView()
                     } label: {
                         VStack(spacing: 4) {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                            Text("Logout")
+                            Image(systemName: "person.2")
+                            Text("Directory")
                                 .font(.caption2)
                         }
                     }

@@ -21,8 +21,18 @@ final class AppState: ObservableObject {
         }
     }
 
-    init() {
+    @Published var availableCongregations:
+        [LoginCongregation] = []
 
+    @Published var pendingLoginResponse:
+        LoginResponse?
+
+    var needsCongregationSelection: Bool {
+        pendingLoginResponse != nil &&
+        availableCongregations.count > 1
+    }
+
+    init() {
         self.session = SessionStore.shared.load()
 
         if session != nil {
@@ -32,7 +42,38 @@ final class AppState: ObservableObject {
         }
     }
 
+    func completeLogin(
+        response: LoginResponse,
+        congregation: LoginCongregation
+    ) {
+        session =
+            ServiceLinkSession(
+                memberId: congregation.memberID,
+                memberName: congregation.memberName,
+                clientId: congregation.clientID,
+                clientName: congregation.clientName,
+                roleId: congregation.roleID,
+                token: response.token,
+                allowPublicTaskRequests:
+                    congregation.allowPublicTaskRequests ?? false,
+                elderFlag:
+                    congregation.elderFlag,
+                useElderTools:
+                    congregation.useElderTools
+            )
+
+        availableCongregations = []
+        pendingLoginResponse = nil
+    }
+
+    func cancelCongregationSelection() {
+        availableCongregations = []
+        pendingLoginResponse = nil
+    }
+
     func logout() {
+        availableCongregations = []
+        pendingLoginResponse = nil
         session = nil
     }
 }
