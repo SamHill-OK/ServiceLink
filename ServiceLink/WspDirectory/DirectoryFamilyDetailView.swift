@@ -180,11 +180,16 @@ struct DirectoryFamilyDetailView: View {
                         }
                     }
 
-                    if !family.adults.isEmpty {
+                    let activeAdults =
+                        family.adults.filter {
+                            $0.activeFlag == true
+                        }
+
+                    if !activeAdults.isEmpty {
 
                         Section("Adults") {
 
-                            ForEach(family.adults) { member in
+                            ForEach(activeAdults) { member in
 
                                 DirectoryFamilyMemberRow(
                                     member: member
@@ -193,11 +198,16 @@ struct DirectoryFamilyDetailView: View {
                         }
                     }
 
-                    if !family.children.isEmpty {
+                    let activeChildren =
+                        family.children.filter {
+                            $0.activeFlag == true
+                        }
+
+                    if !activeChildren.isEmpty {
 
                         Section("Children") {
 
-                            ForEach(family.children) { member in
+                            ForEach(activeChildren) { member in
 
                                 DirectoryFamilyMemberRow(
                                     member: member
@@ -206,13 +216,16 @@ struct DirectoryFamilyDetailView: View {
                         }
                     }
 
-                    if !family.unclassifiedMembers.isEmpty {
+                    let activeOtherMembers =
+                        family.unclassifiedMembers.filter {
+                            $0.activeFlag == true
+                        }
+
+                    if !activeOtherMembers.isEmpty {
 
                         Section("Other Members") {
 
-                            ForEach(
-                                family.unclassifiedMembers
-                            ) { member in
+                            ForEach(activeOtherMembers) { member in
 
                                 DirectoryFamilyMemberRow(
                                     member: member
