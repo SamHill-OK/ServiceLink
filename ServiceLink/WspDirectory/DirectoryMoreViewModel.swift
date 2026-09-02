@@ -39,6 +39,25 @@ final class DirectoryMoreViewModel: ObservableObject {
         }
 
         do {
+            let calendar = Calendar.current
+            let today =
+                calendar.startOfDay(
+                    for: Date()
+                )
+
+            let dateFormatter =
+                DateFormatter()
+
+            dateFormatter.calendar =
+                calendar
+
+            dateFormatter.locale =
+                Locale(
+                    identifier: "en_US_POSIX"
+                )
+
+            dateFormatter.dateFormat =
+                "yyyy-MM-dd"
 
             activities =
                 try await ApiClient.shared.getActivities(
@@ -46,8 +65,23 @@ final class DirectoryMoreViewModel: ObservableObject {
                     year: year,
                     month: month
                 )
-                .filter {
-                    $0.activeFlag
+                .filter { activity in
+                    guard activity.activeFlag
+                    else {
+                        return false
+                    }
+
+                    guard let activityDate =
+                        dateFormatter.date(
+                            from: activity.activityDate
+                        )
+                    else {
+                        return false
+                    }
+
+                    return calendar.startOfDay(
+                        for: activityDate
+                    ) >= today
                 }
 
         } catch let error as URLError
