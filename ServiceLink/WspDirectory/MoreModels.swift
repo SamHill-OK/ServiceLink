@@ -24,13 +24,23 @@ struct DirectoryBirthday: Codable, Identifiable {
 struct DirectoryAnniversary: Codable, Identifiable {
 
     let familyId: Int
+
     let displayName: String
+
     let anniversaryDate: String
+
+    let phone1Name: String?
+
     let phone1: String?
+
+    let phone2Name: String?
+
     let phone2: String?
+
     let familyThumbnailUrl: String?
 
     var id: Int {
         familyId
     }
+
 }

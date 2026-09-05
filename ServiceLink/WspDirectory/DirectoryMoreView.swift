@@ -564,9 +564,14 @@ struct DirectoryMoreView: View {
                                     showPhoneOptions(phone1)
                                 } label: {
 
-                                    Text(
-                                        formatPhone(phone1)
-                                    )
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "phone.fill")
+
+                                        Text(
+                                            anniversary.phone1Name
+                                                ?? "Phone"
+                                        )
+                                    }
                                 }
                                 .buttonStyle(.plain)
                                 .foregroundStyle(.blue)
@@ -579,10 +584,7 @@ struct DirectoryMoreView: View {
                                 anniversary.phone2,
                                !phone2.isEmpty {
 
-                                Text("and")
-                                    .foregroundStyle(
-                                        .secondary
-                                    )
+                                
                             }
 
                             if let phone2 =
@@ -593,9 +595,14 @@ struct DirectoryMoreView: View {
                                     showPhoneOptions(phone2)
                                 } label: {
 
-                                    Text(
-                                        formatPhone(phone2)
-                                    )
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "phone.fill")
+
+                                        Text(
+                                            anniversary.phone2Name
+                                                ?? "Phone"
+                                        )
+                                    }
                                 }
                                 .buttonStyle(.plain)
                                 .foregroundStyle(.blue)
