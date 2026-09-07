@@ -12,6 +12,7 @@ import Combine
 final class DirectoryStaffViewModel: ObservableObject {
 
     @Published var staff: [DirectoryStaffMember] = []
+    @Published var photoAccess: DirectoryPhotoAccessResponse?
     @Published var isLoading = false
     @Published var errorMessage: String?
 
@@ -32,6 +33,13 @@ final class DirectoryStaffViewModel: ObservableObject {
         }
 
         do {
+
+            photoAccess =
+                try? await DirectoryPhotoAccessManager.shared
+                    .getAccess(
+                        clientId: session.clientId,
+                        userId: session.userId
+                    )
 
             staff =
                 try await ApiClient.shared.getDirectoryStaff(

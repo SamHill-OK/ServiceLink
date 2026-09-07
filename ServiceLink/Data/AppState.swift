@@ -48,6 +48,7 @@ final class AppState: ObservableObject {
     ) {
         session =
             ServiceLinkSession(
+                userId: congregation.userID,
                 memberId: congregation.memberID,
                 memberName: congregation.memberName,
                 clientId: congregation.clientID,
@@ -59,7 +60,17 @@ final class AppState: ObservableObject {
                 elderFlag:
                     congregation.elderFlag,
                 useElderTools:
-                    congregation.useElderTools
+                    congregation.useElderTools,
+                
+                useDirectory:
+                    congregation.useDirectory
+                        ?? response.useDirectory
+                        ?? false,
+
+                directoryId:
+                    congregation.directoryID
+                        ?? response.directoryID
+                
             )
 
         availableCongregations = []
@@ -72,8 +83,35 @@ final class AppState: ObservableObject {
     }
 
     func logout() {
+
         availableCongregations = []
         pendingLoginResponse = nil
         session = nil
+
+        Task {
+            await DirectoryPhotoAccessManager.shared.clear()
+        }
+    }
+    func removeCongregation(
+        _ congregation: LoginCongregation
+    ) async throws {
+
+        guard
+            let response = pendingLoginResponse,
+            let globalUserId = response.globalUserID
+        else {
+            return
+        }
+
+        try await ApiClient.shared.leaveCongregation(
+            globalUserId: globalUserId,
+            userId: congregation.userID,
+            clientId: congregation.clientID
+        )
+
+        availableCongregations.removeAll {
+            $0.clientID == congregation.clientID &&
+            $0.userID == congregation.userID
+        }
     }
 }

@@ -64,11 +64,15 @@ struct DirectoryFamiliesView: View {
 
                         HStack(spacing: 12) {
 
-                            if let photoPath = family.familyPhotoThumbnailUrl,
-                               let url = URL(
-                                    string:
-                                        "\(ApiConfig.baseUrl)/\(photoPath)"
-                               ) {
+                            if
+                                family.familyPhotoThumbnailUrl != nil,
+                                let access = vm.photoAccess,
+                                let url =
+                                    DirectoryPhotoUrlBuilder.familyThumbnailUrl(
+                                        access: access,
+                                        wspFamilyId: family.wspFamilyId
+                                    )
+                            {
 
                                 AsyncImage(url: url) { phase in
 

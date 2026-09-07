@@ -12,6 +12,7 @@ import Combine
 final class DirectoryMoreViewModel: ObservableObject {
 
     @Published var activities: [DirectoryActivity] = []
+    @Published var photoAccess: DirectoryPhotoAccessResponse?
 
     @Published var isLoading = false
 
@@ -118,12 +119,21 @@ final class DirectoryMoreViewModel: ObservableObject {
         }
 
         do {
+
+            photoAccess =
+                try? await DirectoryPhotoAccessManager.shared
+                    .getAccess(
+                        clientId: session.clientId,
+                        userId: session.userId
+                    )
+
             birthdays =
                 try await ApiClient.shared.getBirthdays(
                     clientId: session.clientId,
                     year: year,
                     month: month
                 )
+
         } catch let error as URLError
             where error.code == .cancelled {
 
@@ -158,6 +168,12 @@ final class DirectoryMoreViewModel: ObservableObject {
         }
 
         do {
+            photoAccess =
+                try? await DirectoryPhotoAccessManager.shared
+                    .getAccess(
+                        clientId: session.clientId,
+                        userId: session.userId
+                    )
             anniversaries =
                 try await ApiClient.shared.getAnniversaries(
                     clientId: session.clientId,

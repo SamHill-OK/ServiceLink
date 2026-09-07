@@ -40,7 +40,8 @@ struct DirectoryStaffView: View {
                     
                     NavigationLink {
                         DirectoryStaffDetailView(
-                            staffMember: staffMember
+                            staffMember: staffMember,
+                            photoAccess: vm.photoAccess
                         )
                     } label: {
                         
@@ -88,12 +89,16 @@ struct DirectoryStaffView: View {
         _ staffMember: DirectoryStaffMember
     ) -> some View {
 
-        if let photoPath =
-            staffMember.staffPhotoThumbnailUrl,
-           let url = URL(
-                string:
-                    "\(ApiConfig.baseUrl)/\(photoPath)"
-           ) {
+        if
+            staffMember.staffPhotoThumbnailUrl != nil,
+            let access = vm.photoAccess,
+            let url =
+                DirectoryPhotoUrlBuilder.staffThumbnailUrl(
+                    access: access,
+                    directoryStaffId:
+                        staffMember.directoryStaffId
+                )
+        {
 
             AsyncImage(url: url) { phase in
 

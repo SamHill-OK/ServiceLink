@@ -23,7 +23,18 @@ final class LoginViewModel: ObservableObject {
 
             let congregations =
                 response.congregations ?? []
+            
+            print(
+                "TOP DIRECTORY:",
+                response.useDirectory as Any,
+                response.directoryID as Any
+            )
 
+            print(
+                "CONG DIRECTORY:",
+                congregations.first?.useDirectory as Any,
+                congregations.first?.directoryID as Any
+            )
             print(
                 "Congregation count =",
                 congregations.count
@@ -45,6 +56,7 @@ final class LoginViewModel: ObservableObject {
             let selectedCongregation =
                 congregations.first
                 ?? LoginCongregation(
+                    userID: response.userID,
                     memberID: response.memberID,
                     memberName: response.memberName,
                     clientID: response.clientID,
@@ -55,7 +67,13 @@ final class LoginViewModel: ObservableObject {
                     elderFlag:
                         response.elderFlag,
                     useElderTools:
-                        response.useElderTools
+                        response.useElderTools,
+                    
+                    useDirectory:
+                        response.useDirectory,
+
+                    directoryID:
+                        response.directoryID
                 )
 
             appState.completeLogin(

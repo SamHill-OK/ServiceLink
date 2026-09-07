@@ -12,6 +12,7 @@ import Combine
 final class DirectoryViewModel: ObservableObject {
 
     @Published var families: [DirectoryFamily] = []
+    @Published var photoAccess: DirectoryPhotoAccessResponse?
     @Published var isLoading = false
     @Published var errorMessage: String?
 
@@ -33,6 +34,13 @@ final class DirectoryViewModel: ObservableObject {
         }
 
         do {
+
+            photoAccess =
+                try? await DirectoryPhotoAccessManager.shared
+                    .getAccess(
+                        clientId: session.clientId,
+                        userId: session.userId
+                    )
 
             families =
                 try await ApiClient.shared.searchDirectoryFamilies(

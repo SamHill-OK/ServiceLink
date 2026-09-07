@@ -40,11 +40,15 @@ struct DirectoryFamilyDetailView: View {
             } else if let family = vm.family {
 
                 List {
-                    if let photoPath = family.familyPhotoUrl,
-                       let url = URL(
-                            string:
-                                "\(ApiConfig.baseUrl)/\(photoPath)"
-                       ) {
+                    if
+                        family.familyPhotoUrl != nil,
+                        let access = vm.photoAccess,
+                        let url =
+                            DirectoryPhotoUrlBuilder.familyPhotoUrl(
+                                access: access,
+                                wspFamilyId: wspFamilyId
+                            )
+                    {
 
                         Section {
 

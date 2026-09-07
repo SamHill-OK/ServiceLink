@@ -14,6 +14,7 @@ struct LoginRequest: Codable {
 
 struct LoginResponse: Codable {
 
+    let userID: Int
     let memberID: Int
     let memberName: String
 
@@ -27,6 +28,9 @@ struct LoginResponse: Codable {
     
     let elderFlag: Bool
     let useElderTools: Bool
+    let useDirectory: Bool?
+    let directoryID: Int?
+    
     let globalUserID: Int?
     let congregations: [LoginCongregation]?
 
@@ -35,6 +39,7 @@ struct LoginResponse: Codable {
 
 struct LoginCongregation: Codable, Identifiable {
 
+    let userID: Int
     let memberID: Int
     let memberName: String
 
@@ -46,8 +51,18 @@ struct LoginCongregation: Codable, Identifiable {
     let allowPublicTaskRequests: Bool?
     let elderFlag: Bool
     let useElderTools: Bool
+    
+    let useDirectory: Bool?
+    let directoryID: Int?
 
     var id: Int {
         clientID
     }
+}
+
+struct LeaveCongregationRequest: Codable {
+
+    let globalUserId: Int
+    let userId: Int
+    let clientId: Int
 }

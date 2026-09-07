@@ -15,6 +15,7 @@ struct DirectoryStaffDetailView: View {
     
     
     let staffMember: DirectoryStaffMember
+    let photoAccess: DirectoryPhotoAccessResponse?
 
     var body: some View {
 
@@ -131,10 +132,16 @@ struct DirectoryStaffDetailView: View {
     @ViewBuilder
     private var staffPhoto: some View {
 
-        if let photoPath = staffMember.staffPhotoUrl,
-           let url = URL(
-                string: "\(ApiConfig.baseUrl)/\(photoPath)"
-           ) {
+        if
+            staffMember.staffPhotoUrl != nil,
+            let photoAccess,
+            let url =
+                DirectoryPhotoUrlBuilder.staffPhotoUrl(
+                    access: photoAccess,
+                    directoryStaffId:
+                        staffMember.directoryStaffId
+                )
+        {
 
             AsyncImage(url: url) { phase in
 

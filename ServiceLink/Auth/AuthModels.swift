@@ -8,6 +8,8 @@
 import Foundation
 
 struct ServiceLinkSession: Codable {
+    
+    let userId: Int
     let memberId: Int
     let memberName: String
 
@@ -21,6 +23,9 @@ struct ServiceLinkSession: Codable {
     
     let elderFlag: Bool
     let useElderTools: Bool
+    
+    let useDirectory: Bool
+    let directoryId: Int?
     
     var isAdmin: Bool {
         roleId < 3

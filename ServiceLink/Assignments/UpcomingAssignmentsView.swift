@@ -222,13 +222,18 @@ struct UpcomingAssignmentsView: View {
                         Spacer()
                     }
 
-                    NavigationLink {
-                        DirectoryView()
-                    } label: {
-                        VStack(spacing: 4) {
-                            Image(systemName: "person.2")
-                            Text("Directory")
-                                .font(.caption2)
+                    if appState.session?.useDirectory == true &&
+                        appState.session?.directoryId == 3 {
+
+                        NavigationLink {
+                            DirectoryView()
+                        } label: {
+                            VStack(spacing: 4) {
+                                Image(systemName: "person.2")
+
+                                Text("Directory")
+                                    .font(.caption2)
+                            }
                         }
                     }
                 }

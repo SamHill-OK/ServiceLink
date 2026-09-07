@@ -444,7 +444,9 @@ struct DirectoryMoreView: View {
 
                     familyThumbnail(
                         path:
-                            birthday.familyThumbnailUrl
+                            birthday.familyThumbnailUrl,
+                        familyId:
+                            birthday.familyId
                     )
 
                     VStack(
@@ -531,9 +533,10 @@ struct DirectoryMoreView: View {
 
                     familyThumbnail(
                         path:
-                            anniversary.familyThumbnailUrl
+                            anniversary.familyThumbnailUrl,
+                        familyId:
+                            anniversary.familyId
                     )
-
                     VStack(
                         alignment: .leading,
                         spacing: 5
@@ -618,14 +621,19 @@ struct DirectoryMoreView: View {
     }
     @ViewBuilder
     private func familyThumbnail(
-        path: String?
+        path: String?,
+        familyId: Int
     ) -> some View {
 
-        if let path,
-           let url = URL(
-                string:
-                    "\(ApiConfig.baseUrl)/\(path)"
-           ) {
+        if
+            path != nil,
+            let access = vm.photoAccess,
+            let url =
+                DirectoryPhotoUrlBuilder.familyThumbnailUrl(
+                    access: access,
+                    wspFamilyId: familyId
+                )
+        {
 
             AsyncImage(url: url) { phase in
 

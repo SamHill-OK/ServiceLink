@@ -128,7 +128,46 @@ final class ApiClient {
 
         return try decoder.decode(LoginResponse.self, from: data)
     }
-    
+    func leaveCongregation(
+        globalUserId: Int,
+        userId: Int,
+        clientId: Int
+    ) async throws {
+
+        let url =
+            try buildUrl(
+                "/api/Login/LeaveCongregation",
+                query: []
+            )
+
+        var request =
+            URLRequest(url: url)
+
+        request.httpMethod = "POST"
+
+        request.setValue(
+            "application/json",
+            forHTTPHeaderField: "Content-Type"
+        )
+
+        let body =
+            LeaveCongregationRequest(
+                globalUserId: globalUserId,
+                userId: userId,
+                clientId: clientId
+            )
+
+        request.httpBody =
+            try encoder.encode(body)
+
+        let (data, response) =
+            try await session.data(for: request)
+
+        try validate(
+            resp: response,
+            data: data
+        )
+    }
     func getAssignments(
         clientId: Int,
         memberId: Int
@@ -949,5 +988,53 @@ final class ApiClient {
             throw ApiError.decoding(error)
         }
     }
-    
+    func getDirectoryPhotoAccess(
+        clientId: Int,
+        userId: Int
+    ) async throws -> DirectoryPhotoAccessResponse {
+
+        let url =
+            try buildUrl(
+                "/api/DirectoryPhotoAccess",
+                query: [
+                    URLQueryItem(
+                        name: "clientId",
+                        value: String(clientId)
+                    )
+                ]
+            )
+
+        var request =
+            URLRequest(url: url)
+
+        request.httpMethod =
+            "GET"
+
+        request.setValue(
+            String(userId),
+            forHTTPHeaderField: "X-UserID"
+        )
+
+        let (data, response) =
+            try await session.data(
+                for: request
+            )
+
+        try validate(
+            resp: response,
+            data: data
+        )
+
+        do {
+
+            return try decoder.decode(
+                DirectoryPhotoAccessResponse.self,
+                from: data
+            )
+
+        } catch {
+
+            throw ApiError.decoding(error)
+        }
+    }
 }
